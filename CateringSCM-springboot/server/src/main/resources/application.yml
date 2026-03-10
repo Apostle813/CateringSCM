@@ -1,0 +1,41 @@
+spring:
+  application:
+    name: server
+  profiles:
+    active: dev
+  datasource:
+    driver-class-name: ${scm.datasource.driver-class-name}
+    url: ${scm.datasource.url}
+    username: ${scm.datasource.username}
+    password: ${scm.datasource.password}
+
+#jwt:
+#  admin-secret-key: catering_scm_my_graduation-design
+#  admin-ttl: 86400000
+#  admin-token-name: authentication
+#  user-secret-key: user_catering
+#  user-ttl: 86400000
+#  user-token-name: authentication
+
+login-reg:
+  jwt:
+    admin-secret-key: catering_catering_scm_my_graduation-design
+    admin-ttl: 864000000
+    admin-token-name: Authorization
+
+mybatis-plus:
+  configuration:
+    map-underscore-to-camel-case: true
+  mapper-locations: classpath*:/mapper/**/*.xml
+  type-aliases-package: com.student.scm.entity
+
+springdoc:
+  packages-to-scan: com.student.scm.controller
+  swagger-ui:
+    enabled: true
+    path: /swagger-ui/index.html
+    url: v3/api-docs
+    disable-swagger-default-url: false
+  api-docs:
+    enabled: true
+    path: /v3/api-docs

@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="Encoding" defaultCharsetForPropertiesFiles="UTF-8">
+    <file url="file://$PROJECT_DIR$/CateringSCM-springboot/common/src/main/java" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/CateringSCM-springboot/pojo/src/main/java" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/CateringSCM-springboot/server/src/main/java" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/CateringSCM-springboot/src/main/java" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/CateringSCM-springboot/src/main/resources" charset="UTF-8" />
+  </component>
+</project>
