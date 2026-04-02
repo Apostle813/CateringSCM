@@ -2,7 +2,6 @@ package com.student.scm.config;
 
 import com.student.scm.interceptor.JwtTokenInterceptor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.web.servlet.config.annotation.InterceptorRegistry;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
@@ -13,9 +12,11 @@ import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 @Configuration
 @Slf4j
 public class WebMvcConfiguration implements WebMvcConfigurer {
-
-    @Autowired
     private JwtTokenInterceptor jwtTokenInterceptor;
+
+    public WebMvcConfiguration(JwtTokenInterceptor jwtTokenInterceptor) {
+        this.jwtTokenInterceptor = jwtTokenInterceptor;
+    }
 
     @Override
     public void addInterceptors(InterceptorRegistry registry) {
@@ -23,6 +24,8 @@ public class WebMvcConfiguration implements WebMvcConfigurer {
         registry.addInterceptor(jwtTokenInterceptor)
                 .addPathPatterns("/**")             // 拦截所有请求
                 .excludePathPatterns("/user/login") // 排除登录接口
+                .excludePathPatterns("/swagger-ui/**") // 排除登录接口
+                .excludePathPatterns("/v3/**") // 排除登录接口
                 .excludePathPatterns("/file/upload"); // 如果你有图片上传展示接口，建议也排除一下
     }
 }

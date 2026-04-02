@@ -21,7 +21,7 @@ login-reg:
   jwt:
     admin-secret-key: catering_catering_scm_my_graduation-design
     admin-ttl: 864000000
-    admin-token-name: Authorization
+    admin-token-name: token
 
 mybatis-plus:
   configuration:

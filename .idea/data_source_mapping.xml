@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="DataSourcePerFileMappings">
+    <file url="file://$PROJECT_DIR$/CateringSCM-springboot/server/src/main/resources/mapper/ScmInventoryMapper.xml" value="f1dc1682-ce41-4ad9-93cf-8bd8268eb567" />
+    <file url="file://$PROJECT_DIR$/CateringSCM-springboot/server/src/main/resources/mapper/ScmPurchaseOrderMapper.xml" value="f1dc1682-ce41-4ad9-93cf-8bd8268eb567" />
+  </component>
+</project>

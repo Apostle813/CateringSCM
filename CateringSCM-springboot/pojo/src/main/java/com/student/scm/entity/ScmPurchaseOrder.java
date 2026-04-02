@@ -1,18 +1,14 @@
 package com.student.scm.entity;
 
-import java.math.BigDecimal;
-
-import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableName;
-import com.baomidou.mybatisplus.annotation.IdType;
-import com.baomidou.mybatisplus.annotation.TableId;
-import java.time.LocalDateTime;
-import java.io.Serializable;
-
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.experimental.Accessors;
+
+import java.io.Serializable;
+import java.math.BigDecimal;
+import java.time.LocalDateTime;
 
 @Data
 @EqualsAndHashCode(callSuper = false)
@@ -35,6 +31,12 @@ public class ScmPurchaseOrder implements Serializable {
     @Schema(description = "入库仓库ID")
     private Long warehouseId;
 
+    @Schema(description = "备注")
+    private String remark;
+
+    @Schema(description = "创建用户")
+    private long createUser;
+
     @Schema(description = "总金额")
     private BigDecimal totalAmount;
 
@@ -43,6 +45,9 @@ public class ScmPurchaseOrder implements Serializable {
 
     @Schema(description = "审核时间")
     private LocalDateTime auditTime;
+
+    @Schema(description = "审核人ID")
+    private Long auditUser;
 
     @Schema(description = "创建时间")
     private LocalDateTime createTime;

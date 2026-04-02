@@ -1,15 +1,15 @@
 package com.student.scm.entity;
 
-import com.baomidou.mybatisplus.annotation.TableField;
-import com.baomidou.mybatisplus.annotation.TableName;
 import com.baomidou.mybatisplus.annotation.IdType;
 import com.baomidou.mybatisplus.annotation.TableId;
-import java.time.LocalDateTime;
-import java.io.Serializable;
+import com.baomidou.mybatisplus.annotation.TableName;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.experimental.Accessors;
+
+import java.io.Serializable;
+import java.time.LocalDateTime;
 
 @Data
 @EqualsAndHashCode(callSuper = false)
@@ -24,7 +24,10 @@ public class ScmStockLog implements Serializable {
     private Long id;
 
     @Schema(description = "关联单据号(采购单号/领料单号)")
-    private String orderNo;
+    private String referenceNo;
+
+    @Schema(description = "操作人ID")
+    private Long operatorId;
 
     @Schema(description = "类型(1:采购入库 2:领料出库 3:盘点调整)")
     private Integer type;

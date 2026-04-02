@@ -1,17 +1,16 @@
 package com.student.scm.entity;
 
-import java.math.BigDecimal;
-
+import com.baomidou.mybatisplus.annotation.FieldFill;
 import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableName;
-import com.baomidou.mybatisplus.annotation.IdType;
-import com.baomidou.mybatisplus.annotation.TableId;
-import java.time.LocalDateTime;
-import java.io.Serializable;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.experimental.Accessors;
+
+import java.io.Serializable;
+import java.math.BigDecimal;
+import java.time.LocalDateTime;
 
 @Data
 @EqualsAndHashCode(callSuper = false)
@@ -41,10 +40,20 @@ public class ScmMaterial implements Serializable {
     private BigDecimal price;
 
     @Schema(description = "创建时间")
+    @TableField(fill = FieldFill.INSERT)
     private LocalDateTime createTime;
 
+    @Schema(description = "创建人")
+    @TableField(fill = FieldFill.INSERT)
+    private Long createBy;
+
     @Schema(description = "修改时间")
+    @TableField(fill = FieldFill.INSERT_UPDATE)
     private LocalDateTime updateTime;
+
+    @Schema(description = "修改人")
+    @TableField(fill = FieldFill.INSERT_UPDATE)
+    private Long updateBy;
 
 
 }

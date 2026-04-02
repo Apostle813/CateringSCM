@@ -1,11 +1,15 @@
 package com.student.scm.dto;
 
+import lombok.AllArgsConstructor;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 
 import java.math.BigDecimal;
 import java.util.List;
 
 @Data
+@AllArgsConstructor
+@NoArgsConstructor
 public class PurchaseOrderSubmitDTO {
     // 1. 主表信息
     private Long supplierId;     // 供应商ID

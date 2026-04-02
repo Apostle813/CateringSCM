@@ -41,7 +41,7 @@ public class ScmSysUserController {
         }
     }
 
-    @PostMapping
+    @PostMapping()
     public Result<String> save(@RequestBody ScmSysUser scmSysUser) {
         // 默认密码设置为 123456
         scmSysUser.setPassword("123456");
