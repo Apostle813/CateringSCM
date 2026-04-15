@@ -4,23 +4,14 @@ import com.student.scm.context.BaseContext;
 import com.student.scm.properties.JwtProperties;
 import com.student.scm.utils.JwtUtil;
 import io.jsonwebtoken.Claims;
-import lombok.AllArgsConstructor;
-import lombok.Data;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
 import org.springframework.web.method.HandlerMethod;
 import org.springframework.web.servlet.HandlerInterceptor;
 
-import jakarta.servlet.http.HttpServletRequest;
-import jakarta.servlet.http.HttpServletResponse;
-
-/**
- * JWT 令牌拦截器
- */
-@Setter
 @Component
 @Slf4j
 public class JwtTokenInterceptor implements HandlerInterceptor {
@@ -35,19 +26,18 @@ public class JwtTokenInterceptor implements HandlerInterceptor {
 
         // 判断当前拦截到的是Controller的方法还是其他资源
         if (!(handler instanceof HandlerMethod)) {
-            // 当前拦截到的不是Controller动态方法，直接放行
+            // 拦截到非Controller动态方法
             return true;
         }
 
         // 2. 从请求头 (Header) 中获取前端传来的 token
-        // 假设前端统一把 token 放在名为 "token" 的 Header 中
         String token = request.getHeader(jwtProperties.getAdminTokenName());
 
         // 3. 判断 token 是否为空
         if (!StringUtils.hasText(token)) {
-            log.error("拦截到未携带Token的请求: {}", request.getRequestURI());
-            response.setStatus(401); // 401 Unauthorized 表示未认证
-            return false; // 拦截，不放行
+            log.error("Token 解析失败或已过期: {}", request.getRequestURI());
+            response.setStatus(401);
+            return false; // 拦截
         }
 
         // 4. 解析并验证 Token

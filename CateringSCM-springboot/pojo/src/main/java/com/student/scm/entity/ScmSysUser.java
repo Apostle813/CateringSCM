@@ -1,7 +1,6 @@
 package com.student.scm.entity;
 
-import com.baomidou.mybatisplus.annotation.IdType;
-import com.baomidou.mybatisplus.annotation.TableId;
+import com.baomidou.mybatisplus.annotation.TableLogic;
 import com.baomidou.mybatisplus.annotation.TableName;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
@@ -38,6 +37,7 @@ public class ScmSysUser {
     private Integer status;
 
     @Schema(description = "逻辑删除标识(0正常,1删除)")
+    @TableLogic
     private Integer isDeleted;
 
     @Schema(description = "创建时间")

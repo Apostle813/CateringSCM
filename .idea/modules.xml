@@ -3,6 +3,7 @@
   <component name="ProjectModuleManager">
     <modules>
       <module fileurl="file://$PROJECT_DIR$/.idea/CateringSCM.iml" filepath="$PROJECT_DIR$/.idea/CateringSCM.iml" />
+      <module fileurl="file://$PROJECT_DIR$/cateringscm-vue/cateringscm-vue.iml" filepath="$PROJECT_DIR$/cateringscm-vue/cateringscm-vue.iml" />
     </modules>
   </component>
 </project>

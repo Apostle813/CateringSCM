@@ -38,8 +38,6 @@ public class ScmSysUserServiceImpl extends ServiceImpl<ScmSysUserMapper, ScmSysU
         // 2. 核心业务判断：如果不符合条件，直接抛出 RuntimeException 异常
         //账号不存在
         if (user == null) {throw new RuntimeException(MessageConstant.ACCOUNT_NOT_FOUND);}
-        //账号处于删除状态
-        if (user.getIsDeleted()==1) {throw new RuntimeException(MessageConstant.ACCOUNT_DELETE);}
         //账号处于禁用状态
         if (user.getStatus() == 0) {throw new RuntimeException(MessageConstant.ACCOUNT_STOP_USE);}
         //判断密码是否正确

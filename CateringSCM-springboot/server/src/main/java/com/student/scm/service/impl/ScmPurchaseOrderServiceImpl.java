@@ -16,7 +16,6 @@ import com.student.scm.service.IScmInventoryService;
 import com.student.scm.service.IScmPurchaseDetailService;
 import com.student.scm.service.IScmPurchaseOrderService;
 import com.student.scm.service.IScmStockLogService;
-import lombok.Data;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
@@ -28,7 +27,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
 
-@Data
 @Service
 public class ScmPurchaseOrderServiceImpl extends ServiceImpl<ScmPurchaseOrderMapper, ScmPurchaseOrder> implements IScmPurchaseOrderService {
     private IScmPurchaseDetailService purchaseDetailService;
