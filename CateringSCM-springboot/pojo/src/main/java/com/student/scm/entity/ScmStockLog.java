@@ -38,7 +38,7 @@ public class ScmStockLog implements Serializable {
     @Schema(description = "物料ID")
     private Long materialId;
 
-    @Schema(description = "变动数量(+100 或 -50)")
+    @Schema(description = "变动数量")
     private Integer changeQty;
 
     @Schema(description = "变动前数量")

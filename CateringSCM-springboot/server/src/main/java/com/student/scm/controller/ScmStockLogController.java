@@ -1,9 +1,8 @@
 package com.student.scm.controller;
 
 
-import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.student.scm.dto.StockLogPageQueryDTO;
-import com.student.scm.entity.ScmStockLog;
+import com.student.scm.result.PageResult;
 import com.student.scm.result.Result;
 import com.student.scm.service.IScmStockLogService;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -19,8 +18,8 @@ public class ScmStockLogController {
     }
 
     @GetMapping("/page")
-    public Result<Page<ScmStockLog>> page(StockLogPageQueryDTO queryDTO) {
-        Page<ScmStockLog> pageInfo = stockLogService.queryPageByCondition(queryDTO);
+    public Result<PageResult> page(StockLogPageQueryDTO queryDTO) {
+        PageResult pageInfo = stockLogService.queryPageByCondition(queryDTO);
         return Result.success(pageInfo);
     }
 }

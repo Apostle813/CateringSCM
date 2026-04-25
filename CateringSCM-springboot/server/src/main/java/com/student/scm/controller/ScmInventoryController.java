@@ -1,10 +1,9 @@
 package com.student.scm.controller;
 
-import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.student.scm.dto.InventoryAdjustDTO;
 import com.student.scm.dto.InventoryOutboundDTO;
 import com.student.scm.dto.InventoryPageQueryDTO;
-import com.student.scm.entity.ScmInventory;
+import com.student.scm.result.PageResult;
 import com.student.scm.result.Result;
 import com.student.scm.service.IScmInventoryService;
 import org.springframework.web.bind.annotation.*;
@@ -18,8 +17,8 @@ public class ScmInventoryController {
         this.inventoryService = inventoryService;
     }
     @GetMapping("/page")
-    public Result<Page<ScmInventory>> page(InventoryPageQueryDTO queryDTO) {
-        Page<ScmInventory> pageInfo= inventoryService.queryPageByCondition(queryDTO);
+    public Result<PageResult> page(InventoryPageQueryDTO queryDTO) {
+        PageResult pageInfo= inventoryService.queryPageByCondition(queryDTO);
         return Result.success(pageInfo);
     }
     @PostMapping("/outbound")
