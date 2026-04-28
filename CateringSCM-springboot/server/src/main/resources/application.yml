@@ -17,6 +17,8 @@ spring:
 #  user-ttl: 86400000
 #  user-token-name: authentication
 
+
+
 login-reg:
   jwt:
     admin-secret-key: catering_catering_scm_my_graduation-design
@@ -26,6 +28,7 @@ login-reg:
 mybatis-plus:
   configuration:
     map-underscore-to-camel-case: true
+    log-impl: org.apache.ibatis.logging.stdout.StdOutImpl
   mapper-locations: classpath*:/mapper/**/*.xml
   type-aliases-package: com.student.scm.entity
 

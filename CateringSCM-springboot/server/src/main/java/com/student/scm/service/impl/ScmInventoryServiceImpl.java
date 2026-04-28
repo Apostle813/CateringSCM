@@ -1,6 +1,7 @@
 package com.student.scm.service.impl;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.student.scm.context.BaseContext;
@@ -46,14 +47,11 @@ public class ScmInventoryServiceImpl extends ServiceImpl<ScmInventoryMapper, Scm
         Page<ScmInventory> pageInfo = new Page<>(queryDTO.getPage(), queryDTO.getPageSize());
         LambdaQueryWrapper<ScmInventory> queryWrapper = new LambdaQueryWrapper<>();
 
-        // 如果前端传了仓库ID或物资名称，在这里加条件
-        if (queryDTO.getWarehouseId() != null) {
-            queryWrapper.eq(ScmInventory::getWarehouseId, queryDTO.getWarehouseId());
-        }
+        queryWrapper.eq(queryDTO.getWarehouseId() != null, ScmInventory::getWarehouseId, queryDTO.getWarehouseId())
+                .eq(queryDTO.getMaterialId() != null, ScmInventory::getMaterialId, queryDTO.getMaterialId());
+
         queryWrapper.orderByAsc(ScmInventory::getId);
-        queryWrapper.eq(queryDTO.getWarehouseId() != null, ScmInventory::getWarehouseId, queryDTO.getWarehouseId());
-        queryWrapper.eq(queryDTO.getMaterialId() != null, ScmInventory::getMaterialId, queryDTO.getMaterialId());
-        queryWrapper.orderByAsc(ScmInventory::getId);
+
         this.page(pageInfo, queryWrapper);
 
         List<ScmInventoryVO> voList = pageInfo.getRecords().stream().map(entity -> {
@@ -84,29 +82,31 @@ public class ScmInventoryServiceImpl extends ServiceImpl<ScmInventoryMapper, Scm
         Long warehouseId = dto.getWarehouseId();
         Long materialId = dto.getMaterialId();
         Integer outQty = dto.getOutQty();
-        // 1. 查询当前库存
         LambdaQueryWrapper<ScmInventory> wrapper = new LambdaQueryWrapper<>();
         wrapper.eq(ScmInventory::getWarehouseId, warehouseId)
                 .eq(ScmInventory::getMaterialId, materialId);
         ScmInventory inventory = this.getOne(wrapper);
-        // 2. 核心校验：防超卖 (不能扣成负数)
+
         if (inventory == null || inventory.getQuantity() < outQty) {
-            throw new RuntimeException("操作失败：该仓库的此食材库存不足！当前余量：" +
-                    (inventory == null ? 0 : inventory.getQuantity()));
+            throw new RuntimeException("操作失败：该仓库的此食材库存不足！");
         }
         int beforeQty = inventory.getQuantity();
 
-        // 3. 扣减台账库存
-        inventory.setQuantity(beforeQty - outQty);
-        this.updateById(inventory);
+        boolean updateResult = this.update(new LambdaUpdateWrapper<ScmInventory>()
+                .eq(ScmInventory::getId, inventory.getId())
+                .ge(ScmInventory::getQuantity, outQty)
+                .setSql("quantity = quantity - " + outQty));
+
+        if (!updateResult) {
+            throw new RuntimeException("系统繁忙或库存已被其他操作员扣减，请重试！");
+        }
         Long currentUserId = BaseContext.getCurrentId();
-        // 4. 记录出库流水 (type = 2)
         ScmStockLog stockLog = new ScmStockLog();
-        stockLog.setReferenceNo(dto.getReferenceNo()); // 比如填写："后厨张大厨领用"
-        stockLog.setType(2);                           // 2: 领料出库
+        stockLog.setReferenceNo(dto.getReferenceNo());
+        stockLog.setType(2);
         stockLog.setWarehouseId(warehouseId);
         stockLog.setMaterialId(materialId);
-        stockLog.setChangeQty(-outQty);                // 注意：出库流水记录为负数！
+        stockLog.setChangeQty(-outQty);
         stockLog.setBeforeQty(beforeQty);
         stockLog.setAfterQty(beforeQty - outQty);
         stockLog.setOperatorId(currentUserId);

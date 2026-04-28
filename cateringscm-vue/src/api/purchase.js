@@ -3,12 +3,21 @@ import request from '@/utils/request'
 export function getPurchasePage(params) {
     return request({ url: '/purchase_order/page', method: 'get', params })
 }
-export function submitPurchase(data) {
+export const submitPurchase=(data) =>{
     return request({ url: '/purchase_order/submit', method: 'post', data })
 }
-export function auditPurchase(id) {
-    return request({ url: `/purchase_order/audit/${id}`, method: 'post' })
+export const auditPurchase=(id) =>{
+    return request({ url: `/purchase_order/auditPass/${id}`, method: 'post' })
 }
-export function rejectPurchase(data) {
+export const rejectPurchase = (data)=> {
     return request({ url: '/purchase_order/reject', method: 'post', data })
+}
+export const payPurchaseOrder = (id) => {
+    return request({ url: `/purchase_order/pay/${id}`, method: 'post' })
+}
+export const inboundPurchaseOrder = (id) => {
+    return request({ url: `/purchase_order/inbound/${id}`, method: 'post' })
+}
+export const quickPurchase = (data) => {
+    return request({ url: '/purchase_order/quick', method: 'post', data })
 }

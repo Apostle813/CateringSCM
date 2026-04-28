@@ -1,8 +1,6 @@
 package com.student.scm.entity;
 
-import com.baomidou.mybatisplus.annotation.FieldFill;
-import com.baomidou.mybatisplus.annotation.TableField;
-import com.baomidou.mybatisplus.annotation.TableName;
+import com.baomidou.mybatisplus.annotation.*;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
@@ -21,6 +19,7 @@ public class ScmWarehouse implements Serializable {
     private static final long serialVersionUID = 1L;
 
     @Schema(description = "主键")
+    @TableId(value = "id", type = IdType.AUTO)
     private Long id;
 
     @Schema(description = "仓库名称(如:主仓库,冷冻库)")

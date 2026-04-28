@@ -13,4 +13,5 @@ public class ScmSysUserVO {
     private Long id;
     private String username;
     private String token;
+    private String roleCode;
 }

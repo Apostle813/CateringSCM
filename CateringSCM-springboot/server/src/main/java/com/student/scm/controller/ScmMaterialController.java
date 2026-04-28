@@ -8,6 +8,8 @@ import com.student.scm.result.Result;
 import com.student.scm.service.IScmMaterialService;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
+
 @RestController
 @RequestMapping("/material")
 public class ScmMaterialController {
@@ -16,6 +18,11 @@ public class ScmMaterialController {
 
     public ScmMaterialController(IScmMaterialService materialService) {
         this.materialService = materialService;
+    }
+
+    @GetMapping("/list")
+    public Result<List<ScmMaterial>> listAll() {
+        return Result.success(materialService.list());
     }
 
     /**

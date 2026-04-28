@@ -46,8 +46,9 @@ const handleLogin = () => {
         // 登录成功，将 token 存入本地
         localStorage.setItem('scm_token', res.token)
         localStorage.setItem('scm_user', JSON.stringify(res))
+        localStorage.setItem('userRole', res.roleCode)
         ElMessage.success('登录成功')
-        router.push('/') // 跳转到首页
+        await router.push('/') // 跳转到首页
       } finally {
         loading.value = false
       }

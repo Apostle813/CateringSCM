@@ -6,21 +6,22 @@
       <el-table-column prop="id" label="流水ID" width="70" align="center" />
       <el-table-column prop="createTime" label="操作时间" width="160" />
       <el-table-column prop="referenceNo" label="关联单号" width="180" />
-      <el-table-column prop="type" label="业务类型" width="100" align="center">
+      <el-table-column prop="type" label="业务类型" width="120" align="center">
         <template #default="scope">
-          <el-tag v-if="scope.row.type === 1" type="success">采购入库</el-tag>
-          <el-tag v-else-if="scope.row.type === 2" type="warning">领料出库</el-tag>
-          <el-tag v-else-if="scope.row.type === 3" type="danger">盘点调整</el-tag>
+          <el-tag v-if="scope.row.type === 1" type="success" effect="dark">采购入库</el-tag>
+          <el-tag v-else-if="scope.row.type === 2" type="danger" effect="dark">领料出库</el-tag>
+          <el-tag v-else-if="scope.row.type === 3" type="warning" effect="dark">盘点调整</el-tag>
+          <el-tag v-else type="info">系统初始化</el-tag>
         </template>
       </el-table-column>
       <el-table-column prop="warehouseName" label="变动仓库" />
       <el-table-column prop="materialName" label="变动物资" />
       <el-table-column label="变动前" width="80" align="center" prop="beforeQty" />
-      <el-table-column label="差值" width="80" align="center">
+      <el-table-column prop="changeQty" label="变动数量" width="100" align="center">
         <template #default="scope">
-          <span :style="{ color: scope.row.changeQty > 0 ? '#67C23A' : '#F56C6C', fontWeight: 'bold' }">
-            {{ scope.row.changeQty > 0 ? '+' + scope.row.changeQty : scope.row.changeQty }}
-          </span>
+    <span :style="{ color: scope.row.changeQty > 0 ? '#67C23A' : '#F56C6C', fontWeight: 'bold' }">
+      {{ scope.row.changeQty > 0 ? '+' + scope.row.changeQty : scope.row.changeQty }}
+    </span>
         </template>
       </el-table-column>
       <el-table-column label="变动后" width="80" align="center" prop="afterQty" />

@@ -4,7 +4,9 @@ import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.student.scm.constant.MessageConstant;
 import com.student.scm.dto.ScmSysUserLoginDTO;
+import com.student.scm.entity.ScmSysRole;
 import com.student.scm.entity.ScmSysUser;
+import com.student.scm.mapper.ScmSysRoleMapper;
 import com.student.scm.mapper.ScmSysUserMapper;
 import com.student.scm.properties.JwtProperties;
 import com.student.scm.service.IScmSysUserService;
@@ -15,15 +17,38 @@ import org.springframework.util.DigestUtils;
 
 import java.util.HashMap;
 import java.util.Map;
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import com.student.scm.dto.ScmSysUserPageQueryDTO;
+import org.springframework.util.StringUtils;
 
 @Service
 public class ScmSysUserServiceImpl extends ServiceImpl<ScmSysUserMapper, ScmSysUser> implements IScmSysUserService {
     private JwtProperties jwtProperties;
     private ScmSysUserMapper userMapper;
+    private ScmSysRoleMapper roleMapper;
 
-    public ScmSysUserServiceImpl(JwtProperties jwtProperties,ScmSysUserMapper userMapper) {
+    public ScmSysUserServiceImpl(JwtProperties jwtProperties, ScmSysUserMapper userMapper, ScmSysRoleMapper roleMapper) {
         this.jwtProperties = jwtProperties;
         this.userMapper = userMapper;
+        this.roleMapper = roleMapper;
+    }
+
+    @Override
+    public Page<ScmSysUser> queryPageByCondition(ScmSysUserPageQueryDTO queryDTO) {
+        Page<ScmSysUser> page = new Page<>(queryDTO.getPage(), queryDTO.getPageSize());
+        LambdaQueryWrapper<ScmSysUser> wrapper = new LambdaQueryWrapper<>();
+        
+        if (StringUtils.hasText(queryDTO.getUsername())) {
+            wrapper.like(ScmSysUser::getUsername, queryDTO.getUsername());
+        }
+        if (StringUtils.hasText(queryDTO.getRealName())) {
+            wrapper.like(ScmSysUser::getRealName, queryDTO.getRealName());
+        }
+        if (queryDTO.getStatus() != null) {
+            wrapper.eq(ScmSysUser::getStatus, queryDTO.getStatus());
+        }
+        wrapper.orderByDesc(ScmSysUser::getCreateTime);
+        return this.page(page, wrapper);
     }
 
     @Override
@@ -46,6 +71,10 @@ public class ScmSysUserServiceImpl extends ServiceImpl<ScmSysUserMapper, ScmSysU
             throw new RuntimeException(MessageConstant.PASSWORD_ERROR);
         }
 
+        // 查询角色信息
+        ScmSysRole role = roleMapper.selectById(user.getRoleId());
+        String roleCode = role != null ? role.getRoleCode() : "";
+
         // 3. 验证通过，准备生成 JWT
         Map<String, Object> claims = new HashMap<>();
         claims.put("userId", user.getId());
@@ -58,6 +87,7 @@ public class ScmSysUserServiceImpl extends ServiceImpl<ScmSysUserMapper, ScmSysU
                 .id(user.getId())
                 .username(user.getUsername())
                 .token(token)
+                .roleCode(roleCode)
                 .build();
     }
 }

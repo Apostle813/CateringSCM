@@ -78,14 +78,13 @@ const loading = ref(false)
 const tableData = ref([])
 const total = ref(0)
 const queryParams = reactive({ page: 1, pageSize: 10 })
-
 // 弹窗控制
 const outboundVisible = ref(false)
 const adjustVisible = ref(false)
 const currentSelected = ref({})
 
 const outboundForm = reactive({ warehouseId: null, materialId: null, outQty: 1, referenceNo: '' })
-const adjustForm = reactive({ warehouseId: null, materialId: null, realQty: 0, referenceNo: '' })
+const adjustForm = reactive({ warehouseId: null, materialId: null, realQty: 0, reason: '' })
 
 const getList = async () => {
   loading.value = true
@@ -111,23 +110,33 @@ const openAdjust = (row) => {
   currentSelected.value = row
   adjustForm.warehouseId = row.warehouseId
   adjustForm.materialId = row.materialId
-  adjustForm.realQty = row.quantity // <--- 这里改为 realQty
+  adjustForm.realQty = row.realQty
   adjustForm.referenceNo = 'ADJ' + Date.now()
   adjustVisible.value = true
 }
 
 const submitOutbound = async () => {
-  await outboundInventory(outboundForm)
-  ElMessage.success('出库成功！')
-  outboundVisible.value = false
-  getList()
+  try {
+    // 发起出库请求
+    await outboundInventory(outboundForm)
+    ElMessage.success('出库成功！')
+    outboundVisible.value = false // 只有成功才会关闭弹窗
+    getList() // 刷新表格
+  } catch (error) {
+    // 如果报错，捕获异常，防止破坏 Vue 路由！
+    console.error('出库操作失败:', error)
+  }
 }
 
 const submitAdjust = async () => {
-  await adjustInventory(adjustForm)
-  ElMessage.success('盘点调整完成！')
-  adjustVisible.value = false
-  getList()
+  try {
+    await adjustInventory(adjustForm)
+    ElMessage.success('盘点调整完成！')
+    adjustVisible.value = false
+    getList()
+  } catch (error) {
+    console.error('盘点操作失败:', error)
+  }
 }
 
 onMounted(() => { getList() })

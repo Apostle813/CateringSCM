@@ -19,7 +19,7 @@ public class ScmDashboardController {
         this.purchaseOrderService = purchaseOrderService;
     }
     @GetMapping("/stat")
-    public Result<DashboardVO> getDashboardStat() {
+    public Result<DashboardVO>  getDashboardStat() {
         DashboardVO vo = new DashboardVO();
 
         // 1. 查总资产

@@ -19,7 +19,7 @@ public class ScmMaterialServiceImpl extends ServiceImpl<ScmMaterialMapper, ScmMa
         LambdaQueryWrapper<ScmMaterial> queryWrapper = new LambdaQueryWrapper<>();
 
         queryWrapper.like(StringUtils.hasText(queryDTO.getName()), ScmMaterial::getName, queryDTO.getName());
-        queryWrapper.orderByDesc(ScmMaterial::getCreateTime);
+        queryWrapper.orderByAsc(ScmMaterial::getId);
 
         this.page(pageInfo, queryWrapper);
         return pageInfo;

@@ -40,6 +40,30 @@ const router = createRouter({
                     path: 'stocklog',
                     name: '库存流水追溯',
                     component: () => import('@/views/StockLog.vue')
+                },
+                {
+                    path: '/supplier',
+                    name: 'Supplier',
+                    component: () => import('@/views/Supplier.vue'),
+                    meta: { title: '供应商管理' }
+                },
+                {
+                    path: '/warehouse',
+                    name: 'Warehouse',
+                    component: () => import('@/views/Warehouse.vue'),
+                    meta: { title: '仓库配置管理' }
+                },
+                {
+                    path: '/requisition',
+                    name: 'Requisition',
+                    component: () => import('@/views/Requisition.vue'),
+                    meta: { title: '门店请购发货' }
+                },
+                {
+                    path: '/sysuser',
+                    name: 'SysUser',
+                    component: () => import('@/views/SysUser.vue'),
+                    meta: { title: '系统用户配置' }
                 }
             ]
         },

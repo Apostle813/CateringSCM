@@ -5,6 +5,7 @@ import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.student.scm.dto.PurchaseOrderPageQueryDTO;
 import com.student.scm.dto.PurchaseOrderRejectDTO;
 import com.student.scm.dto.PurchaseOrderSubmitDTO;
+import com.student.scm.dto.PurchaseQuickOrderDTO;
 import com.student.scm.entity.ScmPurchaseOrder;
 import com.student.scm.result.Result;
 import com.student.scm.service.IScmPurchaseOrderService;
@@ -45,15 +46,31 @@ public class ScmPurchaseOrderController {
         return Result.success(pageInfo);
     }
 
-    @PostMapping("/audit/{id}")
-    public Result<String> auditInbound(@PathVariable Long id) {
-        // TODO: 待实现 Service 层的 auditInbound(id) 方法
-         purchaseOrderService.auditInbound(id);
-        return Result.success("审核通过，库存已增加");
+    @PostMapping("/auditPass/{id}")
+    public Result<String> auditPass(@PathVariable Long id) {
+         purchaseOrderService.auditPass(id);
+        return Result.success("审核通过，等待入库");
     }
     @PostMapping("/reject")
     public Result<String> rejectOrder(@RequestBody PurchaseOrderRejectDTO dto) {
         purchaseOrderService.rejectOrder(dto);
         return Result.success("采购单已成功驳回！");
     }
+    @PostMapping("/pay/{id}")
+    public Result payOrder(@PathVariable Long id) {
+        purchaseOrderService.confirmPayment(id);
+        return Result.success("财务结算成功");
+    }
+    @PostMapping("/inbound/{id}")
+    public Result inboundOrder(@PathVariable Long id) {
+        purchaseOrderService.executeInbound(id);
+        return Result.success("采购入库成功，库存已增加");
+    }
+    @PostMapping("/quick")
+    public Result quickPurchase(@RequestBody PurchaseQuickOrderDTO purchaseQuickOrderDTO) {
+        purchaseOrderService.quickPurchase(purchaseQuickOrderDTO);
+        return Result.success("采购入库成功，库存已增加");
+    }
+
+
 }

@@ -1,69 +1,82 @@
 <template>
   <el-container class="layout-container">
-    <el-aside width="220px" class="aside">
+    <el-aside width="220px">
       <div class="logo">
-        <h2>餐饮 SCM 系统</h2>
+        <el-icon :size="24" color="#409EFF"><Box /></el-icon>
+        <span>餐饮供应链系统</span>
       </div>
+
       <el-menu
           :default-active="$route.path"
           router
-          class="menu"
+          class="el-menu-vertical"
           background-color="#304156"
           text-color="#bfcbd9"
           active-text-color="#409EFF"
       >
         <el-menu-item index="/dashboard">
-          <el-icon><DataLine /></el-icon>
-          <span>首页大屏看板</span>
+          <el-icon><HomeFilled /></el-icon>
+          <span>首页数据看板</span>
         </el-menu-item>
 
-        <el-sub-menu index="1">
+        <el-sub-menu v-if="userRole === 'ADMIN'" index="1">
           <template #title>
-            <el-icon><Box /></el-icon>
-            <span>基础档案</span>
+            <el-icon><Management /></el-icon>
+            <span>基础信息管理</span>
           </template>
-          <el-menu-item index="/material">食材档案管理</el-menu-item>
+          <el-menu-item index="/material">食材物资管理</el-menu-item>
+          <el-menu-item index="/warehouse">仓库配置管理</el-menu-item>
+          <el-menu-item index="/supplier">供应商管理</el-menu-item>
+          <el-menu-item index="/sysuser">系统用户配置</el-menu-item>
         </el-sub-menu>
 
-        <el-sub-menu index="2">
+        <el-sub-menu v-if="userRole === 'ADMIN' || userRole === 'PURCHASER'" index="3">
           <template #title>
             <el-icon><ShoppingCart /></el-icon>
-            <span>采购管理</span>
+            <span>采购与请购业务</span>
           </template>
           <el-menu-item index="/purchase">采购订单审批</el-menu-item>
+          <el-menu-item index="/requisition">门店请购发货</el-menu-item>
         </el-sub-menu>
 
-        <el-sub-menu index="3">
+        <el-menu-item v-if="userRole === 'ADMIN' || userRole === 'WAREHOUSE'" index="/inventory">
+          <el-icon><Box /></el-icon>
+          <span>实时库存管理</span>
+        </el-menu-item>
+
+        <el-sub-menu v-if="userRole === 'ADMIN' || userRole === 'WAREHOUSE'" index="2">
           <template #title>
-            <el-icon><Van /></el-icon>
-            <span>WMS 库存核心</span>
+            <el-icon><List /></el-icon>
+            <span>业务流水查询</span>
           </template>
-          <el-menu-item index="/inventory">库存台账与发料</el-menu-item>
+          <el-menu-item index="/stockLog">库存变动流水</el-menu-item>
         </el-sub-menu>
-
-        <el-sub-menu index="4">
-          <template #title>
-            <el-icon><DocumentChecked /></el-icon>
-            <span>安全与审计</span>
-          </template>
-          <el-menu-item index="/stocklog">操作流水追溯</el-menu-item>
-        </el-sub-menu>
-
       </el-menu>
     </el-aside>
 
     <el-container>
-      <el-header class="header">
-        <div class="breadcrumb">当前位置：{{ $route.name }}</div>
-        <div class="user-info">
-          <span>欢迎，{{ currentUser }}</span>
-          <el-button type="danger" link @click="handleLogout" style="margin-left: 20px;">
-            <el-icon><SwitchButton /></el-icon> 退出
-          </el-button>
+      <el-header>
+        <div class="header-left">
+          <span class="breadcrumb">当前页面：{{ $route.meta.title || '系统管理' }}</span>
+        </div>
+        <div class="header-right">
+          <el-tag type="success" effect="plain" style="margin-right: 15px;">
+            当前角色：{{ roleName }}
+          </el-tag>
+          <el-dropdown @command="handleCommand">
+            <span class="user-info">
+              欢迎您，系统用户 <el-icon><ArrowDown /></el-icon>
+            </span>
+            <template #dropdown>
+              <el-dropdown-menu>
+                <el-dropdown-item command="logout">退出登录</el-dropdown-item>
+              </el-dropdown-menu>
+            </template>
+          </el-dropdown>
         </div>
       </el-header>
 
-      <el-main class="main-content">
+      <el-main>
         <router-view />
       </el-main>
     </el-container>
@@ -71,69 +84,63 @@
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue'
+import { ref, computed } from 'vue'
 import { useRouter } from 'vue-router'
-import { ElMessage } from 'element-plus'
-import { DataLine, Box, ShoppingCart, SwitchButton,Van,DocumentChecked } from '@element-plus/icons-vue' // 引入图标
+import {
+  HomeFilled,
+  Management,
+  ShoppingCart,
+  Box,
+  List,
+  ArrowDown
+} from '@element-plus/icons-vue'
 
 const router = useRouter()
-const currentUser = ref('')
 
-onMounted(() => {
-  // 从登录时存的 localStorage 中取出用户名
-  const userStr = localStorage.getItem('scm_user')
-  if (userStr) {
-    const user = JSON.parse(userStr)
-    currentUser.value = user.username
+// 从本地缓存读取角色，默认为 ADMIN 以便开发调试
+const userRole = ref(localStorage.getItem('userRole') || 'ADMIN')
+
+// 计算角色中文名称，展示在顶栏
+const roleName = computed(() => {
+  const roles = {
+    'ADMIN': '系统管理员',
+    'PURCHASER': '采购主管',
+    'WAREHOUSE': '首席库管员'
   }
+  return roles[userRole.value] || '普通用户'
 })
 
-// 退出登录逻辑
-const handleLogout = () => {
-  localStorage.removeItem('scm_token')
-  localStorage.removeItem('scm_user')
-  ElMessage.success('已安全退出')
-  router.push('/login')
+// 处理退出登录
+const handleCommand = (command) => {
+  if (command === 'logout') {
+    localStorage.clear()
+    router.push('/login')
+  }
 }
 </script>
 
 <style scoped>
-.layout-container {
-  height: 100vh;
-  width: 100vw;
-}
-.aside {
-  background-color: #304156;
-  color: white;
-  display: flex;
-  flex-direction: column;
-}
+.layout-container { height: 100vh; }
 .logo {
   height: 60px;
-  line-height: 60px;
-  text-align: center;
-  background-color: #2b3649;
-  border-bottom: 1px solid #1f2d3d;
-}
-.logo h2 {
-  margin: 0;
-  color: white;
-  font-size: 18px;
-}
-.menu {
-  border-right: none;
-  flex: 1;
-}
-.header {
-  background-color: white;
   display: flex;
-  justify-content: space-between;
   align-items: center;
+  justify-content: center;
+  color: #fff;
+  font-weight: bold;
+  background-color: #2b2f3a;
+}
+.logo span { margin-left: 10px; }
+.el-aside { background-color: #304156; transition: width 0.3s; }
+.el-header {
+  background-color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
   border-bottom: 1px solid #e6e6e6;
-  box-shadow: 0 1px 4px rgba(0,21,41,.08);
+  height: 60px;
 }
-.main-content {
-  background-color: #f0f2f5;
-  padding: 20px;
-}
+.user-info { cursor: pointer; color: #409EFF; font-weight: 500; }
+.breadcrumb { color: #606266; font-size: 14px; }
+.el-menu { border-right: none; }
 </style>

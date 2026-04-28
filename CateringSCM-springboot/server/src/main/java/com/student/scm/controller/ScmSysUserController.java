@@ -6,16 +6,9 @@ import com.student.scm.entity.ScmSysUser;
 import com.student.scm.properties.JwtProperties;
 import com.student.scm.result.Result;
 import com.student.scm.service.IScmSysUserService;
-import com.student.scm.utils.JwtUtil;
 import com.student.scm.vo.ScmSysUserVO;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
-
-import java.util.HashMap;
-import java.util.Map;
+import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("/user")
@@ -43,9 +36,26 @@ public class ScmSysUserController {
 
     @PostMapping()
     public Result<String> save(@RequestBody ScmSysUser scmSysUser) {
-        // 默认密码设置为 123456
-        scmSysUser.setPassword("123456");
+        // 默认密码设置为 123456，并进行 MD5 加密
+        scmSysUser.setPassword(org.springframework.util.DigestUtils.md5DigestAsHex("123456".getBytes()));
         scmsysuserservice.save(scmSysUser);
         return Result.success("员工账号创建成功");
+    }
+
+    @GetMapping("/page")
+    public Result<com.baomidou.mybatisplus.extension.plugins.pagination.Page<ScmSysUser>> page(com.student.scm.dto.ScmSysUserPageQueryDTO queryDTO) {
+        return Result.success(scmsysuserservice.queryPageByCondition(queryDTO));
+    }
+
+    @PutMapping("/update")
+    public Result<String> update(@RequestBody ScmSysUser scmSysUser) {
+        scmsysuserservice.updateById(scmSysUser);
+        return Result.success("修改成功");
+    }
+
+    @DeleteMapping("/{id}")
+    public Result<String> delete(@org.springframework.web.bind.annotation.PathVariable Long id) {
+        scmsysuserservice.removeById(id);
+        return Result.success("删除成功");
     }
 }

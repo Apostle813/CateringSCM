@@ -8,9 +8,12 @@
                  LEFT JOIN scm_material m ON i.material_id = m.id
     </select>
     <select id="getLowStockAlerts" resultType="java.util.Map">
-        SELECT mat.name AS materialName, SUM(inv.quantity) AS totalQty
-        FROM scm_inventory inv LEFT JOIN scm_material mat ON inv.material_id = mat.id
-        GROUP BY inv.material_id, mat.name
-        HAVING SUM(inv.quantity)&lt;20;
-        </select>
+        SELECT w.name     AS warehouseName,
+               m.name     AS materialName,
+               i.quantity AS currentQty
+        FROM scm_inventory i
+                 LEFT JOIN scm_material m ON i.material_id = m.id
+                 LEFT JOIN scm_warehouse w ON i.warehouse_id = w.id
+        WHERE i.quantity &lt; 20
+    </select>
 </mapper>

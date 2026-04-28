@@ -93,7 +93,6 @@ const getList = async () => {
   loading.value = true
   try {
     const res = await getMaterialPage(queryParams)
-    // 对应后端 PageResult 的 records 和 total
     tableData.value = res.records
     total.value = res.total
   } finally {

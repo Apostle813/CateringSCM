@@ -1,5 +1,8 @@
 import request from '@/utils/request'
 
+
+export const getMaterialList = () => { return request({ url: '/material/list', method: 'get' }) }
+
 export function getMaterialPage(params) {
     return request({ url: '/material/page', method: 'get', params })
 }

@@ -1,5 +1,7 @@
 package com.student.scm.entity;
 
+import com.baomidou.mybatisplus.annotation.IdType;
+import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableLogic;
 import com.baomidou.mybatisplus.annotation.TableName;
 import io.swagger.v3.oas.annotations.media.Schema;
@@ -16,6 +18,7 @@ import java.time.LocalDateTime;
 @Schema(title="ScmSysUser", description="用户表")
 public class ScmSysUser {
     @Schema(description = "主键用户ID")
+    @TableId(value = "id", type = IdType.AUTO)
     private Long id;
 
     @Schema(description = "登录账号")

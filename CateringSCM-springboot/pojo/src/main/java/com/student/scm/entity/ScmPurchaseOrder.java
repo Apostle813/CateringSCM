@@ -1,5 +1,7 @@
 package com.student.scm.entity;
 
+import com.baomidou.mybatisplus.annotation.IdType;
+import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
@@ -20,6 +22,7 @@ public class ScmPurchaseOrder implements Serializable {
     private static final long serialVersionUID = 1L;
 
     @Schema(description = "主键")
+    @TableId(value = "id", type = IdType.AUTO)
     private Long id;
 
     @Schema(description = "单号")
@@ -42,6 +45,9 @@ public class ScmPurchaseOrder implements Serializable {
 
     @Schema(description = "状态(0:待审核 1:审核通过 2:已入库 9:驳回)")
     private Integer status;
+
+    @Schema(description = "财务结算状态(0:未结算 1:已结算)")
+    private Integer paymentStatus;
 
     @Schema(description = "审核时间")
     private LocalDateTime auditTime;
