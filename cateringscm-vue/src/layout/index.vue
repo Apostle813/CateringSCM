@@ -104,8 +104,8 @@ const userRole = ref(localStorage.getItem('userRole') || 'ADMIN')
 const roleName = computed(() => {
   const roles = {
     'ADMIN': '系统管理员',
-    'PURCHASER': '采购主管',
-    'WAREHOUSE': '首席库管员'
+    'PURCHASER': '采购员',
+    'WAREHOUSE': '库管员'
   }
   return roles[userRole.value] || '普通用户'
 })

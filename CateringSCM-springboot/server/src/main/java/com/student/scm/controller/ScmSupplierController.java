@@ -39,7 +39,7 @@ public class ScmSupplierController {
         Page<ScmSupplier> pageInfo = new Page<>(page, pageSize);
         LambdaQueryWrapper<ScmSupplier> queryWrapper = new LambdaQueryWrapper<>();
         queryWrapper.like(name != null && !name.isEmpty(), ScmSupplier::getName, name);
-        queryWrapper.orderByDesc(ScmSupplier::getCreateTime);
+        queryWrapper.orderByAsc(ScmSupplier::getId);
         return Result.success(supplierService.page(pageInfo, queryWrapper));
     }
 

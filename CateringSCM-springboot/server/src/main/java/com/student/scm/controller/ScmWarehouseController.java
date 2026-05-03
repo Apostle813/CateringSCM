@@ -24,4 +24,16 @@ public class ScmWarehouseController {
     public Result<List<ScmWarehouse>> listAll() {
         return Result.success(warehouseService.list());
     }
+
+    @org.springframework.web.bind.annotation.PostMapping
+    public Result<?> addWarehouse(@org.springframework.web.bind.annotation.RequestBody ScmWarehouse warehouse) {
+        warehouseService.save(warehouse);
+        return Result.success();
+    }
+
+    @org.springframework.web.bind.annotation.PutMapping("/update")
+    public Result<?> updateWarehouse(@org.springframework.web.bind.annotation.RequestBody ScmWarehouse warehouse) {
+        warehouseService.updateById(warehouse);
+        return Result.success();
+    }
 }
