@@ -40,6 +40,7 @@ public class ScmRequisitionOrderServiceImpl extends ServiceImpl<ScmRequisitionOr
         if (dto.getDetails() == null || dto.getDetails().isEmpty()) {
             throw new RuntimeException("请购明细不能为空！");
         }
+        Long currentUserId = BaseContext.getCurrentId();
         
         // 1. 插入主表
         ScmRequisitionOrder order = new ScmRequisitionOrder();
@@ -49,6 +50,7 @@ public class ScmRequisitionOrderServiceImpl extends ServiceImpl<ScmRequisitionOr
         order.setStatus(0); // 待审核
         order.setPaymentStatus(0); // 未结算
         order.setCreateTime(LocalDateTime.now());
+        order.setCreateBy(currentUserId);
         this.save(order);
 
         // 2. 插入明细表

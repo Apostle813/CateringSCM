@@ -26,8 +26,8 @@ CREATE TABLE `scm_inventory` (
   `warehouse_id` bigint NOT NULL COMMENT '仓库ID',
   `material_id` bigint NOT NULL COMMENT '物料ID',
   `quantity` int DEFAULT '0' COMMENT '当前库存',
-  `update_time` datetime DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   `create_time` datetime DEFAULT CURRENT_TIMESTAMP COMMENT '首次入库时间',
+  `update_time` datetime DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   PRIMARY KEY (`id`),
   UNIQUE KEY `uk_wh_mat` (`warehouse_id`,`material_id`) COMMENT '一个仓库一种物料只有一条记录'
 ) ENGINE=InnoDB AUTO_INCREMENT=8 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci COMMENT='实时库存表';
@@ -37,7 +37,7 @@ CREATE TABLE `scm_inventory` (
 -- Dumping data for table `scm_inventory`
 --
 
-INSERT INTO `scm_inventory` VALUES (1,1,1,163,'2026-04-25 22:20:21','2026-03-11 13:16:06'),(2,1,2,550,'2026-03-11 13:16:06','2026-03-11 13:16:06'),(3,2,3,50,'2026-03-11 13:16:06','2026-03-11 13:16:06'),(4,1,8,20,'2026-04-02 20:00:33','2026-04-02 20:00:33'),(5,1,9,10,'2026-04-02 20:00:33','2026-04-02 20:00:33'),(6,1,10,30,'2026-04-02 20:00:33','2026-04-02 20:00:33'),(7,2,6,15,'2026-04-02 20:00:33','2026-04-02 20:00:33');
+INSERT INTO `scm_inventory` VALUES (1,1,1,162,'2026-03-11 13:16:06','2026-04-25 22:20:21'),(2,1,2,549,'2026-03-11 13:16:06','2026-03-11 13:16:06'),(3,2,3,50,'2026-03-11 13:16:06','2026-03-11 13:16:06'),(4,1,8,20,'2026-04-02 20:00:33','2026-04-02 20:00:33'),(5,1,9,10,'2026-04-02 20:00:33','2026-04-02 20:00:33'),(6,1,10,30,'2026-04-02 20:00:33','2026-04-02 20:00:33'),(7,2,6,15,'2026-04-02 20:00:33','2026-04-02 20:00:33');
 
 --
 -- Table structure for table `scm_material`
@@ -132,14 +132,14 @@ CREATE TABLE `scm_requisition_detail` (
   `plan_qty` int NOT NULL,
   `real_qty` int DEFAULT '0',
   PRIMARY KEY (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=4 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=9 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
 -- Dumping data for table `scm_requisition_detail`
 --
 
-INSERT INTO `scm_requisition_detail` VALUES (1,2,3,4,0),(2,2,4,1,0),(3,2,5,1,0);
+INSERT INTO `scm_requisition_detail` VALUES (1,2,3,4,0),(2,2,4,1,0),(3,2,5,1,0),(4,3,1,2,0),(5,3,3,2,0),(6,3,5,5,0),(7,4,1,1,1),(8,4,2,1,1);
 
 --
 -- Table structure for table `scm_requisition_order`
@@ -155,15 +155,18 @@ CREATE TABLE `scm_requisition_order` (
   `status` tinyint DEFAULT '0' COMMENT '状态(0:待审核 1:已配送出库)',
   `payment_status` tinyint DEFAULT '0' COMMENT '财务结算状态(0:未结算 1:已结算)',
   `create_time` datetime DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+  `create_by` bigint DEFAULT NULL COMMENT '创建的用户',
+  `update_time` datetime DEFAULT NULL COMMENT '修改时间',
+  `update_by` bigint DEFAULT NULL COMMENT '修改的用户',
   PRIMARY KEY (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=3 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci COMMENT='门店请购出库单';
+) ENGINE=InnoDB AUTO_INCREMENT=5 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci COMMENT='门店请购出库单';
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
 -- Dumping data for table `scm_requisition_order`
 --
 
-INSERT INTO `scm_requisition_order` VALUES (1,'OUT1777268161596',4,1,1,1,'2026-04-27 13:36:02'),(2,'OUT1777268744696',2,2,0,0,'2026-04-27 13:45:45');
+INSERT INTO `scm_requisition_order` VALUES (1,'OUT1777268161596',4,1,1,1,'2026-04-27 13:36:02',1,NULL,NULL),(2,'OUT1777268744696',2,2,9,0,'2026-04-27 13:45:45',1,NULL,NULL),(3,'OUT1777732540632',2,1,9,0,'2026-05-02 22:35:41',1,NULL,NULL),(4,'OUT1777732761951',1,1,1,1,'2026-05-02 22:39:22',1,NULL,NULL);
 
 --
 -- Table structure for table `scm_stock_log`
@@ -183,14 +186,14 @@ CREATE TABLE `scm_stock_log` (
   `after_qty` int DEFAULT NULL COMMENT '变动后数量',
   `create_time` datetime DEFAULT CURRENT_TIMESTAMP COMMENT '发生时间',
   PRIMARY KEY (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=25 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci COMMENT='库存流水日志表';
+) ENGINE=InnoDB AUTO_INCREMENT=29 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci COMMENT='库存流水日志表';
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
 -- Dumping data for table `scm_stock_log`
 --
 
-INSERT INTO `scm_stock_log` VALUES (10,'OUT1776352025952',1,2,1,1,-1,150,149,'2026-04-16 23:07:06'),(11,'OUT1776352047949',1,2,1,1,-1,149,148,'2026-04-16 23:07:28'),(12,'OUT1776352049229',1,2,1,1,-1,148,147,'2026-04-16 23:07:29'),(13,'盘点调整：null',1,3,1,1,1,147,148,'2026-04-16 23:07:31'),(14,'盘点调整：null',1,3,1,1,2,148,150,'2026-04-16 23:07:33'),(15,'OUT1777126696747',1,2,1,1,-1,150,149,'2026-04-25 22:18:17'),(16,'盘点调整：',1,3,1,1,-148,149,1,'2026-04-25 22:18:43'),(17,'盘点调整：',1,3,1,1,149,1,150,'2026-04-25 22:20:11'),(18,'OUT1777126811864',1,2,1,1,-1,150,149,'2026-04-25 22:20:13'),(19,'OUT1777126815436',1,2,1,1,-1,149,148,'2026-04-25 22:20:16'),(20,'OUT1777126817572',1,2,1,1,-3,148,145,'2026-04-25 22:20:19'),(21,'OUT1777126820308',1,2,1,1,-2,145,143,'2026-04-25 22:20:21'),(22,'P1777216175249',1,1,1,1,10,143,153,'2026-04-26 23:09:37'),(24,'P1777216203325',1,1,1,1,10,153,163,'2026-04-27 13:53:32');
+INSERT INTO `scm_stock_log` VALUES (10,'OUT1776352025952',1,2,1,1,-1,150,149,'2026-04-16 23:07:06'),(11,'OUT1776352047949',1,2,1,1,-1,149,148,'2026-04-16 23:07:28'),(12,'OUT1776352049229',1,2,1,1,-1,148,147,'2026-04-16 23:07:29'),(13,'盘点调整：null',1,3,1,1,1,147,148,'2026-04-16 23:07:31'),(14,'盘点调整：null',1,3,1,1,2,148,150,'2026-04-16 23:07:33'),(15,'OUT1777126696747',1,2,1,1,-1,150,149,'2026-04-25 22:18:17'),(16,'盘点调整：',1,3,1,1,-148,149,1,'2026-04-25 22:18:43'),(17,'盘点调整：',1,3,1,1,149,1,150,'2026-04-25 22:20:11'),(18,'OUT1777126811864',1,2,1,1,-1,150,149,'2026-04-25 22:20:13'),(19,'OUT1777126815436',1,2,1,1,-1,149,148,'2026-04-25 22:20:16'),(20,'OUT1777126817572',1,2,1,1,-3,148,145,'2026-04-25 22:20:19'),(21,'OUT1777126820308',1,2,1,1,-2,145,143,'2026-04-25 22:20:21'),(22,'P1777216175249',1,1,1,1,10,143,153,'2026-04-26 23:09:37'),(24,'P1777216203325',1,1,1,1,10,153,163,'2026-04-27 13:53:32'),(27,'OUT1777732761951',1,2,1,1,-1,163,162,'2026-05-02 22:39:24'),(28,'OUT1777732761951',1,2,1,2,-1,550,549,'2026-05-02 22:39:24');
 
 --
 -- Table structure for table `scm_supplier`
@@ -203,7 +206,7 @@ CREATE TABLE `scm_supplier` (
   `name` varchar(100) NOT NULL COMMENT '供应商名称',
   `contact` varchar(50) DEFAULT NULL COMMENT '联系人',
   `phone` varchar(20) DEFAULT NULL COMMENT '电话',
-  `status` tinyint DEFAULT '1' COMMENT '状态',
+  `status` int DEFAULT '1' COMMENT '状态',
   `create_time` datetime NOT NULL DEFAULT (now()) COMMENT '创建时间',
   `create_by` bigint DEFAULT NULL COMMENT '创建人',
   `update_time` datetime NOT NULL DEFAULT (now()) COMMENT '修改时间',
@@ -216,7 +219,7 @@ CREATE TABLE `scm_supplier` (
 -- Dumping data for table `scm_supplier`
 --
 
-INSERT INTO `scm_supplier` VALUES (1,'绿源生态农业基地','农老板','13911112222',1,'2026-03-11 13:16:05',NULL,'2026-03-11 13:16:05',NULL),(2,'极客肉联厂批发部','肉老板','13933334444',1,'2026-03-11 13:16:05',NULL,'2026-03-11 13:16:05',NULL),(3,'大洋远洋海鲜贸易','海哥','13955556666',1,'2026-03-11 13:16:05',NULL,'2026-03-11 13:16:05',NULL),(4,'金龙粮油批发代理','王总','13888889999',1,'2026-04-02 20:00:33',1,'2026-04-02 20:00:33',1),(5,'城市酒水直营店','刘经理','13777778888',1,'2026-04-02 20:00:33',1,'2026-04-02 20:00:33',1);
+INSERT INTO `scm_supplier` VALUES (1,'绿源生态农业基地','农老板','13911112222',1,'2026-03-11 13:16:05',1,'2026-03-11 13:16:05',NULL),(2,'极客肉联厂批发部','肉老板','13933334444',1,'2026-03-11 13:16:05',1,'2026-03-11 13:16:05',NULL),(3,'大洋远洋海鲜贸易','海哥','13955556666',1,'2026-03-11 13:16:05',1,'2026-03-11 13:16:05',NULL),(4,'金龙粮油批发代理','王总','13888889999',1,'2026-04-02 20:00:33',1,'2026-04-02 20:00:33',NULL),(5,'城市酒水直营店','刘经理','13777778888',1,'2026-04-02 20:00:33',1,'2026-04-02 20:00:33',NULL);
 
 --
 -- Table structure for table `scm_sys_role`
@@ -251,6 +254,7 @@ CREATE TABLE `scm_sys_user` (
   `password` varchar(100) NOT NULL COMMENT '登录密码(MD5加密)',
   `real_name` varchar(50) NOT NULL COMMENT '真实姓名(如:张三)',
   `phone` varchar(20) DEFAULT NULL COMMENT '联系电话',
+  `sex` char(1) DEFAULT NULL COMMENT '性别',
   `role_id` bigint NOT NULL COMMENT '关联的角色ID',
   `status` tinyint DEFAULT '1' COMMENT '账号状态(1:启用 0:停用)',
   `is_deleted` tinyint DEFAULT '0' COMMENT '逻辑删除标识(0正常,1删除)',
@@ -265,7 +269,7 @@ CREATE TABLE `scm_sys_user` (
 -- Dumping data for table `scm_sys_user`
 --
 
-INSERT INTO `scm_sys_user` VALUES (1,'admin','e10adc3949ba59abbe56e057f20f883e','系统总管','13800000001',1,1,0,'2026-03-11 13:16:05','2026-03-11 13:16:05'),(2,'buyer','e10adc3949ba59abbe56e057f20f883e','张三(采购)','13800000002',2,1,0,'2026-03-11 13:16:05','2026-03-11 13:16:05'),(3,'stocker','e10adc3949ba59abbe56e057f20f883e','李四(库管)','13800000003',3,1,0,'2026-03-11 13:16:05','2026-03-11 13:16:05');
+INSERT INTO `scm_sys_user` VALUES (1,'admin','e10adc3949ba59abbe56e057f20f883e','系统总管','13800000001','男',1,1,0,'2026-03-11 13:16:05','2026-05-07 19:37:40'),(2,'buyer','e10adc3949ba59abbe56e057f20f883e','张三(采购)','13800000002','女',2,1,0,'2026-03-11 13:16:05','2026-05-07 19:37:40'),(3,'stocker','e10adc3949ba59abbe56e057f20f883e','李四(库管)','13800000003','男',3,1,0,'2026-03-11 13:16:05','2026-05-07 19:37:40');
 
 --
 -- Table structure for table `scm_warehouse`
@@ -302,4 +306,4 @@ INSERT INTO `scm_warehouse` VALUES (1,'主仓库(常温)','园区A栋1楼','李�
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
--- Dump completed on 2026-05-02 21:15:47
+-- Dump completed on 2026-05-07 19:45:32
