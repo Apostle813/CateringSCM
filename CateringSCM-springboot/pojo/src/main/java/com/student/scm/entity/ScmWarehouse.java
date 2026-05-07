@@ -22,7 +22,7 @@ public class ScmWarehouse implements Serializable {
     @TableId(value = "id", type = IdType.AUTO)
     private Long id;
 
-    @Schema(description = "仓库名称(如:主仓库,冷冻库)")
+    @Schema(description = "仓库名称")
     private String name;
 
     @Schema(description = "位置")

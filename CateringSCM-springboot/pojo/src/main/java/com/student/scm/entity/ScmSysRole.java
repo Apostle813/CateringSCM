@@ -23,7 +23,7 @@ public class ScmSysRole {
     private String roleName;
 
     @Schema(description = "角色权限")
-    private String roleCode; // 实际开发中密码不能明文传输，需加密
+    private String roleCode;
 
     @Schema(description = "角色职责描述")
     private String description;

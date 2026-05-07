@@ -36,7 +36,6 @@ public class ScmSysUserController {
 
     @PostMapping()
     public Result<String> save(@RequestBody ScmSysUser scmSysUser) {
-        // 默认密码设置为 123456，并进行 MD5 加密
         scmSysUser.setPassword(org.springframework.util.DigestUtils.md5DigestAsHex("123456".getBytes()));
         scmsysuserservice.save(scmSysUser);
         return Result.success("员工账号创建成功");

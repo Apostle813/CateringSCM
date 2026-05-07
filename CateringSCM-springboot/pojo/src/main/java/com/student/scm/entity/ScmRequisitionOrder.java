@@ -1,8 +1,6 @@
 package com.student.scm.entity;
 
-import com.baomidou.mybatisplus.annotation.IdType;
-import com.baomidou.mybatisplus.annotation.TableId;
-import com.baomidou.mybatisplus.annotation.TableName;
+import com.baomidou.mybatisplus.annotation.*;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
@@ -39,5 +37,17 @@ public class ScmRequisitionOrder implements Serializable {
     private Integer paymentStatus;
 
     @Schema(description = "创建时间")
+    @TableField(fill = FieldFill.INSERT_UPDATE)
     private LocalDateTime createTime;
+
+    @Schema(description = "创建人")
+    private Long createBy;
+
+    @Schema(description = "修改时间")
+    @TableField(fill = FieldFill.INSERT_UPDATE)
+    private LocalDateTime updateTime;
+
+    @Schema(description = "修改人")
+    private Long updateBy;
+
 }

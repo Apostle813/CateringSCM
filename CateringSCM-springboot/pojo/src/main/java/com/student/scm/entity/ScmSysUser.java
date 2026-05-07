@@ -33,6 +33,9 @@ public class ScmSysUser {
     @Schema(description = "联系电话")
     private String phone;
 
+    @Schema(description = "性别")
+    private String sex;
+
     @Schema(description = "关联的角色ID")
     private Long roleId;     // 绑定角色，决定他能干什么
 
