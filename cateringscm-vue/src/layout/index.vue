@@ -27,6 +27,7 @@
           <el-menu-item index="/material">食材物资管理</el-menu-item>
           <el-menu-item index="/warehouse">仓库配置管理</el-menu-item>
           <el-menu-item index="/supplier">供应商管理</el-menu-item>
+          <el-menu-item index="/store">门店信息管理</el-menu-item>
           <el-menu-item index="/sysuser">系统用户配置</el-menu-item>
         </el-sub-menu>
 
@@ -50,6 +51,7 @@
             <span>业务流水查询</span>
           </template>
           <el-menu-item index="/stockLog">库存变动流水</el-menu-item>
+          <el-menu-item index="/operationLog">操作日志审计</el-menu-item>
         </el-sub-menu>
       </el-menu>
     </el-aside>
@@ -65,10 +67,11 @@
           </el-tag>
           <el-dropdown @command="handleCommand">
             <span class="user-info">
-              欢迎您，系统用户 <el-icon><ArrowDown /></el-icon>
+              欢迎您，{{ userInfo.realName || '系统用户' }} <el-icon><ArrowDown /></el-icon>
             </span>
             <template #dropdown>
               <el-dropdown-menu>
+                <el-dropdown-item command="profile">个人中心</el-dropdown-item>
                 <el-dropdown-item command="logout">退出登录</el-dropdown-item>
               </el-dropdown-menu>
             </template>
@@ -84,7 +87,7 @@
 </template>
 
 <script setup>
-import { ref, computed } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import {
   HomeFilled,
@@ -94,11 +97,15 @@ import {
   List,
   ArrowDown
 } from '@element-plus/icons-vue'
+import { getProfile } from '@/api/user'
 
 const router = useRouter()
 
 // 从本地缓存读取角色，默认为 ADMIN 以便开发调试
 const userRole = ref(localStorage.getItem('userRole') || 'ADMIN')
+
+// 用户信息
+const userInfo = ref({})
 
 // 计算角色中文名称，展示在顶栏
 const roleName = computed(() => {
@@ -110,13 +117,34 @@ const roleName = computed(() => {
   return roles[userRole.value] || '普通用户'
 })
 
-// 处理退出登录
+// 加载用户信息
+const loadProfile = async () => {
+  try {
+    const res = await getProfile()
+    userInfo.value = res
+    // 缓存角色信息
+    if (res.roleCode) {
+      localStorage.setItem('userRole', res.roleCode)
+      userRole.value = res.roleCode
+    }
+  } catch (error) {
+    console.error('加载用户信息失败', error)
+  }
+}
+
+// 处理下拉菜单命令
 const handleCommand = (command) => {
   if (command === 'logout') {
     localStorage.clear()
-    router.push('/login')
+    window.location.href = '/login'  // 强制跳转并刷新页面
+  } else if (command === 'profile') {
+    router.push('/profile')
   }
 }
+
+onMounted(() => {
+  loadProfile()
+})
 </script>
 
 <style scoped>

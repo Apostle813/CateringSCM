@@ -12,5 +12,6 @@ public interface IScmSysUserService extends IService<ScmSysUser> {
 
     ScmSysUserVO login(ScmSysUserLoginDTO loginUser);
     Page<ScmSysUser> queryPageByCondition(ScmSysUserPageQueryDTO queryDTO);
+    ScmSysUserVO getProfile();  // 获取当前登录用户的个人信息
 
 }

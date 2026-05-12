@@ -14,4 +14,9 @@ public class ScmSysUserVO {
     private String username;
     private String token;
     private String roleCode;
+    private String realName;  // 真实姓名
+    private String phone;      // 联系电话
+    private String sex;        // 性别
+    private String roleName;   // 角色名称
+    private Integer status;    // 账号状态
 }

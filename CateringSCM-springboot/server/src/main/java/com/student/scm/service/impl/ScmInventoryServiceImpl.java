@@ -17,13 +17,16 @@ import com.student.scm.mapper.ScmMaterialMapper;
 import com.student.scm.mapper.ScmWarehouseMapper;
 import com.student.scm.result.PageResult;
 import com.student.scm.service.IScmInventoryService;
+import com.student.scm.service.IScmOperationLogService;
 import com.student.scm.service.IScmStockLogService;
 import com.student.scm.vo.ScmInventoryVO;
 import org.springframework.beans.BeanUtils;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.util.StringUtils;
 
 import java.math.BigDecimal;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -31,15 +34,16 @@ import java.util.stream.Collectors;
 @Service
 public class ScmInventoryServiceImpl extends ServiceImpl<ScmInventoryMapper, ScmInventory> implements IScmInventoryService {
     private final IScmStockLogService stockLogService;
-    private final ScmWarehouseMapper  warehouseMapper;
+    private final IScmOperationLogService operationLogService;
+    private final ScmWarehouseMapper warehouseMapper;
     private final ScmMaterialMapper materialMapper;
 
-    public ScmInventoryServiceImpl(IScmStockLogService stockLogService, ScmWarehouseMapper warehouseMapper, ScmMaterialMapper materialMapper) {
+    public ScmInventoryServiceImpl(IScmStockLogService stockLogService, IScmOperationLogService operationLogService, ScmWarehouseMapper warehouseMapper, ScmMaterialMapper materialMapper) {
         this.stockLogService = stockLogService;
+        this.operationLogService = operationLogService;
         this.warehouseMapper = warehouseMapper;
         this.materialMapper = materialMapper;
     }
-
 
 
     @Override
@@ -47,8 +51,37 @@ public class ScmInventoryServiceImpl extends ServiceImpl<ScmInventoryMapper, Scm
         Page<ScmInventory> pageInfo = new Page<>(queryDTO.getPage(), queryDTO.getPageSize());
         LambdaQueryWrapper<ScmInventory> queryWrapper = new LambdaQueryWrapper<>();
 
+        // 按仓库筛选
         queryWrapper.eq(queryDTO.getWarehouseId() != null, ScmInventory::getWarehouseId, queryDTO.getWarehouseId())
                 .eq(queryDTO.getMaterialId() != null, ScmInventory::getMaterialId, queryDTO.getMaterialId());
+
+        // 新增：按物料名称模糊查询（需要先查询符合条件的物料ID）
+        if (StringUtils.hasText(queryDTO.getMaterialName())) {
+            LambdaQueryWrapper<ScmMaterial> materialWrapper = new LambdaQueryWrapper<>();
+            materialWrapper.like(ScmMaterial::getName, queryDTO.getMaterialName());
+            List<ScmMaterial> materials = materialMapper.selectList(materialWrapper);
+            if (!materials.isEmpty()) {
+                List<Long> materialIds = materials.stream().map(ScmMaterial::getId).collect(Collectors.toList());
+                queryWrapper.in(ScmInventory::getMaterialId, materialIds);
+            } else {
+                // 如果没有符合条件的物料，直接返回空结果
+                return new PageResult(0L, Collections.emptyList());
+            }
+        }
+
+        // 新增：按分类筛选（需要先查询符合条件的物料ID）
+        if (StringUtils.hasText(queryDTO.getCategory())) {
+            LambdaQueryWrapper<ScmMaterial> materialWrapper = new LambdaQueryWrapper<>();
+            materialWrapper.eq(ScmMaterial::getCategory, queryDTO.getCategory());
+            List<ScmMaterial> materials = materialMapper.selectList(materialWrapper);
+            if (!materials.isEmpty()) {
+                List<Long> materialIds = materials.stream().map(ScmMaterial::getId).collect(Collectors.toList());
+                queryWrapper.in(ScmInventory::getMaterialId, materialIds);
+            } else {
+                // 如果没有符合条件的物料，直接返回空结果
+                return new PageResult(0L, Collections.emptyList());
+            }
+        }
 
         queryWrapper.orderByAsc(ScmInventory::getId);
 
@@ -112,6 +145,8 @@ public class ScmInventoryServiceImpl extends ServiceImpl<ScmInventoryMapper, Scm
         stockLog.setOperatorId(currentUserId);
 
         stockLogService.save(stockLog);
+
+        operationLogService.saveLog("INVENTORY_OUTBOUND", "手动出库 物料ID:" + materialId + " 数量:" + outQty + " 参考:" + dto.getReferenceNo(), "inventory", materialId);
     }
 
     @Override
@@ -156,5 +191,31 @@ public class ScmInventoryServiceImpl extends ServiceImpl<ScmInventoryMapper, Scm
         stockLog.setOperatorId(BaseContext.getCurrentId());
 
         stockLogService.save(stockLog);
+
+        operationLogService.saveLog("INVENTORY_ADJUST", "盘点调整 物料ID:" + materialId + " 原:" + beforeQty + "->" + realQty + " 原因:" + dto.getReason(), "inventory", materialId);
+    }
+
+    @Override
+    public Integer getStockQty(Long warehouseId, Long materialId) {
+        LambdaQueryWrapper<ScmInventory> wrapper = new LambdaQueryWrapper<>();
+        wrapper.eq(ScmInventory::getWarehouseId, warehouseId)
+                .eq(ScmInventory::getMaterialId, materialId);
+        ScmInventory inventory = this.getOne(wrapper);
+        return inventory != null ? inventory.getQuantity() : 0;
+    }
+
+    @Override
+    public List<Map<String, Object>> getWarehouseAssetDistribution() {
+        return this.baseMapper.getWarehouseAssetDistribution();
+    }
+
+    @Override
+    public Integer getMonthInboundQty() {
+        return this.baseMapper.getMonthInboundQty();
+    }
+
+    @Override
+    public Integer getMonthOutboundQty() {
+        return this.baseMapper.getMonthOutboundQty();
     }
 }

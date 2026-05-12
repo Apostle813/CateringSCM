@@ -12,6 +12,7 @@ import com.student.scm.entity.ScmRequisitionOrder;
 import com.student.scm.entity.ScmStockLog;
 import com.student.scm.mapper.ScmRequisitionOrderMapper;
 import com.student.scm.service.IScmInventoryService;
+import com.student.scm.service.IScmOperationLogService;
 import com.student.scm.service.IScmRequisitionDetailService;
 import com.student.scm.service.IScmRequisitionOrderService;
 import com.student.scm.service.IScmStockLogService;
@@ -27,11 +28,13 @@ public class ScmRequisitionOrderServiceImpl extends ServiceImpl<ScmRequisitionOr
     private final IScmRequisitionDetailService detailService;
     private final IScmInventoryService inventoryService;
     private final IScmStockLogService stockLogService;
+    private final IScmOperationLogService operationLogService;
 
-    public ScmRequisitionOrderServiceImpl(IScmRequisitionDetailService detailService, IScmInventoryService inventoryService, IScmStockLogService stockLogService) {
+    public ScmRequisitionOrderServiceImpl(IScmRequisitionDetailService detailService, IScmInventoryService inventoryService, IScmStockLogService stockLogService, IScmOperationLogService operationLogService) {
         this.detailService = detailService;
         this.inventoryService = inventoryService;
         this.stockLogService = stockLogService;
+        this.operationLogService = operationLogService;
     }
 
     @Override
@@ -41,19 +44,18 @@ public class ScmRequisitionOrderServiceImpl extends ServiceImpl<ScmRequisitionOr
             throw new RuntimeException("请购明细不能为空！");
         }
         Long currentUserId = BaseContext.getCurrentId();
-        
-        // 1. 插入主表
+
         ScmRequisitionOrder order = new ScmRequisitionOrder();
-        order.setOrderNo("OUT" + System.currentTimeMillis());
+        String orderNo = "OUT" + System.currentTimeMillis();
+        order.setOrderNo(orderNo);
         order.setStoreId(dto.getStoreId());
         order.setWarehouseId(dto.getWarehouseId());
-        order.setStatus(0); // 待审核
-        order.setPaymentStatus(0); // 未结算
+        order.setStatus(0);
+        order.setPaymentStatus(0);
         order.setCreateTime(LocalDateTime.now());
         order.setCreateBy(currentUserId);
         this.save(order);
 
-        // 2. 插入明细表
         for (RequisitionOrderSubmitDTO.RequisitionDetailDTO d : dto.getDetails()) {
             ScmRequisitionDetail detail = new ScmRequisitionDetail();
             detail.setOrderId(order.getId());
@@ -62,18 +64,29 @@ public class ScmRequisitionOrderServiceImpl extends ServiceImpl<ScmRequisitionOr
             detail.setRealQty(0);
             detailService.save(detail);
         }
+
+        operationLogService.saveLog("REQUISITION_SUBMIT", "门店发起请购 单号:" + orderNo, "requisition_order", order.getId());
     }
 
     @Override
     public Page<ScmRequisitionOrder> queryPageByCondition(RequisitionOrderPageQueryDTO queryDTO) {
         Page<ScmRequisitionOrder> page = new Page<>(queryDTO.getPage(), queryDTO.getPageSize());
         LambdaQueryWrapper<ScmRequisitionOrder> wrapper = new LambdaQueryWrapper<>();
-        
+
         if (queryDTO.getOrderNo() != null && !queryDTO.getOrderNo().isEmpty()) {
             wrapper.like(ScmRequisitionOrder::getOrderNo, queryDTO.getOrderNo());
         }
         if (queryDTO.getStatus() != null) {
             wrapper.eq(ScmRequisitionOrder::getStatus, queryDTO.getStatus());
+        }
+        if (queryDTO.getWarehouseId() != null) {
+            wrapper.eq(ScmRequisitionOrder::getWarehouseId, queryDTO.getWarehouseId());
+        }
+        if (queryDTO.getStartDate() != null && !queryDTO.getStartDate().isEmpty()) {
+            wrapper.ge(ScmRequisitionOrder::getCreateTime, queryDTO.getStartDate() + " 00:00:00");
+        }
+        if (queryDTO.getEndDate() != null && !queryDTO.getEndDate().isEmpty()) {
+            wrapper.le(ScmRequisitionOrder::getCreateTime, queryDTO.getEndDate() + " 23:59:59");
         }
         wrapper.orderByDesc(ScmRequisitionOrder::getCreateTime);
         return this.page(page, wrapper);
@@ -86,7 +99,6 @@ public class ScmRequisitionOrderServiceImpl extends ServiceImpl<ScmRequisitionOr
         if (order == null) throw new RuntimeException("单据不存在");
         if (order.getStatus() != 0) throw new RuntimeException("单据状态不是待审核，无法出库");
 
-        // 查找明细
         LambdaQueryWrapper<ScmRequisitionDetail> detailWrapper = new LambdaQueryWrapper<>();
         detailWrapper.eq(ScmRequisitionDetail::getOrderId, orderId);
         List<ScmRequisitionDetail> detailList = detailService.list(detailWrapper);
@@ -96,12 +108,11 @@ public class ScmRequisitionOrderServiceImpl extends ServiceImpl<ScmRequisitionOr
 
         for (ScmRequisitionDetail detail : detailList) {
             Long materialId = detail.getMaterialId();
-            Integer outQty = detail.getPlanQty(); // 假设计划量为实际出库量
+            Integer outQty = detail.getPlanQty();
 
             detail.setRealQty(outQty);
             detailService.updateById(detail);
 
-            // 扣减库存
             LambdaQueryWrapper<ScmInventory> invWrapper = new LambdaQueryWrapper<>();
             invWrapper.eq(ScmInventory::getWarehouseId, warehouseId)
                       .eq(ScmInventory::getMaterialId, materialId);
@@ -115,10 +126,9 @@ public class ScmRequisitionOrderServiceImpl extends ServiceImpl<ScmRequisitionOr
             inventory.setQuantity(beforeQty - outQty);
             inventoryService.updateById(inventory);
 
-            // 记录出库流水 (type=2 代表出库)
             ScmStockLog stockLog = new ScmStockLog();
             stockLog.setReferenceNo(order.getOrderNo());
-            stockLog.setType(2); 
+            stockLog.setType(2);
             stockLog.setWarehouseId(warehouseId);
             stockLog.setMaterialId(materialId);
             stockLog.setChangeQty(-outQty);
@@ -128,8 +138,10 @@ public class ScmRequisitionOrderServiceImpl extends ServiceImpl<ScmRequisitionOr
             stockLogService.save(stockLog);
         }
 
-        order.setStatus(1); // 已配送出库
+        order.setStatus(1);
         this.updateById(order);
+
+        operationLogService.saveLog("REQUISITION_AUDIT", "审核发货 出库单号:" + order.getOrderNo(), "requisition_order", orderId);
     }
 
     @Override
@@ -138,8 +150,10 @@ public class ScmRequisitionOrderServiceImpl extends ServiceImpl<ScmRequisitionOr
         ScmRequisitionOrder order = this.getById(orderId);
         if (order == null) throw new RuntimeException("单据不存在");
         if (order.getStatus() != 0) throw new RuntimeException("单据状态不是待审核，无法驳回");
-        order.setStatus(9); // 9表示已驳回
+        order.setStatus(9);
         this.updateById(order);
+
+        operationLogService.saveLog("REQUISITION_REJECT", "驳回出库单 单号:" + order.getOrderNo(), "requisition_order", orderId);
     }
 
     @Override
@@ -149,5 +163,12 @@ public class ScmRequisitionOrderServiceImpl extends ServiceImpl<ScmRequisitionOr
         if (order.getPaymentStatus() == 1) throw new RuntimeException("已经结算过，无需重复结算");
         order.setPaymentStatus(1);
         this.updateById(order);
+
+        operationLogService.saveLog("REQUISITION_PAY", "内部结算 出库单号:" + order.getOrderNo(), "requisition_order", orderId);
+    }
+
+    @Override
+    public Long countPending() {
+        return this.baseMapper.countPending();
     }
 }

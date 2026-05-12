@@ -14,6 +14,15 @@
         FROM scm_inventory i
                  LEFT JOIN scm_material m ON i.material_id = m.id
                  LEFT JOIN scm_warehouse w ON i.warehouse_id = w.id
-        WHERE i.quantity &lt; 20
+        ORDER BY i.quantity ASC
+    </select>
+
+    <select id="getWarehouseAssetDistribution" resultType="java.util.Map">
+        SELECT w.name  AS name,
+               IFNULL(SUM(i.quantity * m.price), 0) AS value
+        FROM scm_inventory i
+                 LEFT JOIN scm_material m ON i.material_id = m.id
+                 RIGHT JOIN scm_warehouse w ON i.warehouse_id = w.id
+        GROUP BY w.id, w.name
     </select>
 </mapper>

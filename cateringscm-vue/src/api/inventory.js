@@ -11,3 +11,7 @@ export function outboundInventory(data) {
 export function adjustInventory(data) {
     return request({ url: '/inventory/adjust', method: 'post', data })
 }
+// 查询指定仓库+食材的库存量
+export function getStockQty(params) {
+    return request({ url: '/inventory/stockQty', method: 'get', params })
+}

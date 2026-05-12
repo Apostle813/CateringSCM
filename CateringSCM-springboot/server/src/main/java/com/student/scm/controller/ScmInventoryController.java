@@ -32,4 +32,9 @@ public class ScmInventoryController {
         inventoryService.adjust(dto);
         return Result.success("盘点调整成功！");
     }
+
+    @GetMapping("/stockQty")
+    public Result<Integer> getStockQty(@RequestParam Long warehouseId, @RequestParam Long materialId) {
+        return Result.success(inventoryService.getStockQty(warehouseId, materialId));
+    }
 }

@@ -18,6 +18,7 @@ export const payPurchaseOrder = (id) => {
 export const inboundPurchaseOrder = (id) => {
     return request({ url: `/purchase_order/inbound/${id}`, method: 'post' })
 }
-export const quickPurchase = (data) => {
-    return request({ url: '/purchase_order/quick', method: 'post', data })
+// 查询采购订单明细
+export const getPurchaseDetails = (orderId) => {
+    return request({ url: `/purchase_detail/list/${orderId}`, method: 'get' })
 }

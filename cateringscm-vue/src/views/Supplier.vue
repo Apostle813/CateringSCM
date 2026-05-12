@@ -1,7 +1,12 @@
 <template>
   <div class="app-container">
     <div class="filter-container" style="margin-bottom: 20px; display: flex; gap: 10px;">
-      <el-input v-model="queryParams.name" placeholder="请输入供应商名称" style="width: 200px" clearable @clear="loadData" @keyup.enter="loadData" />
+      <el-input v-model="queryParams.name" placeholder="供应商名称" style="width: 180px" clearable @clear="loadData" @keyup.enter="loadData" />
+      <el-input v-model="queryParams.contact" placeholder="联系人" style="width: 150px" clearable />
+      <el-select v-model="queryParams.status" placeholder="合作状态" style="width: 120px;" clearable>
+        <el-option label="正常合作" :value="1" />
+        <el-option label="已终止" :value="0" />
+      </el-select>
       <el-button type="primary" icon="Search" @click="loadData">搜索</el-button>
       <el-button type="success" icon="Plus" @click="handleAdd">新增供应商</el-button>
     </div>
@@ -67,7 +72,7 @@ import { ElMessage, ElMessageBox } from 'element-plus'
 const loading = ref(false)
 const tableData = ref([])
 const total = ref(0)
-const queryParams = reactive({ page: 1, pageSize: 10, name: '' })
+const queryParams = reactive({ page: 1, pageSize: 10, name: '', contact: '', status: null })
 
 const dialogVisible = ref(false)
 const dialogTitle = ref('')

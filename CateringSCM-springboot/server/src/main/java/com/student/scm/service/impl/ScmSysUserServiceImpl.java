@@ -1,9 +1,12 @@
 package com.student.scm.service.impl;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.student.scm.constant.MessageConstant;
+import com.student.scm.context.BaseContext;
 import com.student.scm.dto.ScmSysUserLoginDTO;
+import com.student.scm.dto.ScmSysUserPageQueryDTO;
 import com.student.scm.entity.ScmSysRole;
 import com.student.scm.entity.ScmSysUser;
 import com.student.scm.mapper.ScmSysRoleMapper;
@@ -14,12 +17,10 @@ import com.student.scm.utils.JwtUtil;
 import com.student.scm.vo.ScmSysUserVO;
 import org.springframework.stereotype.Service;
 import org.springframework.util.DigestUtils;
+import org.springframework.util.StringUtils;
 
 import java.util.HashMap;
 import java.util.Map;
-import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
-import com.student.scm.dto.ScmSysUserPageQueryDTO;
-import org.springframework.util.StringUtils;
 
 @Service
 public class ScmSysUserServiceImpl extends ServiceImpl<ScmSysUserMapper, ScmSysUser> implements IScmSysUserService {
@@ -88,6 +89,35 @@ public class ScmSysUserServiceImpl extends ServiceImpl<ScmSysUserMapper, ScmSysU
                 .username(user.getUsername())
                 .token(token)
                 .roleCode(roleCode)
+                .build();
+    }
+
+    @Override
+    public ScmSysUserVO getProfile() {
+        // 1. 从 ThreadLocal 中获取当前用户ID
+        Long userId = BaseContext.getCurrentId();
+        
+        // 2. 查询用户信息
+        ScmSysUser user = userMapper.selectById(userId);
+        if (user == null) {
+            throw new RuntimeException("用户不存在");
+        }
+        
+        // 3. 查询角色信息
+        ScmSysRole role = roleMapper.selectById(user.getRoleId());
+        String roleCode = role != null ? role.getRoleCode() : "";
+        String roleName = role != null ? role.getRoleName() : "";
+        
+        // 4. 构建并返回 VO
+        return ScmSysUserVO.builder()
+                .id(user.getId())
+                .username(user.getUsername())
+                .realName(user.getRealName())
+                .phone(user.getPhone())
+                .sex(user.getSex())
+                .roleCode(roleCode)
+                .roleName(roleName)
+                .status(user.getStatus())
                 .build();
     }
 }

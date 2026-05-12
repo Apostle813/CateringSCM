@@ -7,7 +7,6 @@ import com.student.scm.context.BaseContext;
 import com.student.scm.dto.PurchaseOrderPageQueryDTO;
 import com.student.scm.dto.PurchaseOrderRejectDTO;
 import com.student.scm.dto.PurchaseOrderSubmitDTO;
-import com.student.scm.dto.PurchaseQuickOrderDTO;
 import com.student.scm.entity.ScmInventory;
 import com.student.scm.entity.ScmPurchaseDetail;
 import com.student.scm.entity.ScmPurchaseOrder;
@@ -17,6 +16,7 @@ import com.student.scm.mapper.ScmPurchaseDetailMapper;
 import com.student.scm.mapper.ScmPurchaseOrderMapper;
 import com.student.scm.mapper.ScmStockLogMapper;
 import com.student.scm.service.IScmInventoryService;
+import com.student.scm.service.IScmOperationLogService;
 import com.student.scm.service.IScmPurchaseDetailService;
 import com.student.scm.service.IScmPurchaseOrderService;
 import com.student.scm.service.IScmStockLogService;
@@ -29,6 +29,7 @@ import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.Random;
 
 @Service
@@ -36,57 +37,53 @@ public class ScmPurchaseOrderServiceImpl extends ServiceImpl<ScmPurchaseOrderMap
     private IScmPurchaseDetailService purchaseDetailService;
     private IScmInventoryService inventoryService;
     private IScmStockLogService stockLogService;
+    private IScmOperationLogService operationLogService;
     private ScmInventoryMapper inventoryMapper;
     private ScmPurchaseDetailMapper detailMapper;
     private ScmStockLogMapper stockLogMapper;
 
-    public ScmPurchaseOrderServiceImpl(IScmPurchaseDetailService purchaseDetailService, IScmInventoryService inventoryService, IScmStockLogService stockLogService, ScmInventoryMapper inventoryMapper, ScmPurchaseDetailMapper detailMapper, ScmStockLogMapper stockLogMapper) {
+    public ScmPurchaseOrderServiceImpl(IScmPurchaseDetailService purchaseDetailService, IScmInventoryService inventoryService, IScmStockLogService stockLogService, IScmOperationLogService operationLogService, ScmInventoryMapper inventoryMapper, ScmPurchaseDetailMapper detailMapper, ScmStockLogMapper stockLogMapper) {
         this.purchaseDetailService = purchaseDetailService;
         this.inventoryService = inventoryService;
         this.stockLogService = stockLogService;
+        this.operationLogService = operationLogService;
         this.inventoryMapper = inventoryMapper;
         this.detailMapper = detailMapper;
         this.stockLogMapper = stockLogMapper;
     }
 
     @Override
-    @Transactional(rollbackFor = Exception.class) // 由于其同时处理多个数据库故要开启数据库事务管理。
+    @Transactional(rollbackFor = Exception.class)
     public void submitOrder(PurchaseOrderSubmitDTO dto) {
         Long currentUserId = BaseContext.getCurrentId();
-        // 1. 校验前端传来的数据不能为空
         if (dto.getDetails() == null || dto.getDetails().isEmpty()) {
             throw new RuntimeException("采购明细不能为空");
         }
-
-        // 2. 遍历计算订单的总金额
         BigDecimal totalAmount = BigDecimal.ZERO;
         for (PurchaseOrderSubmitDTO.PurchaseDetailDTO detailDto : dto.getDetails()) {
-            // 小计金额 = 单价 * 数量
             BigDecimal planQty = new BigDecimal(detailDto.getPlanQty());
             BigDecimal lineAmount = detailDto.getPrice().multiply(planQty);
             totalAmount = totalAmount.add(lineAmount);
         }
 
-        // 3. 构建采购单主表信息并保存
+
         ScmPurchaseOrder order = new ScmPurchaseOrder();
-        // 自动生成单号 (P + 年月日时分秒 + 3位随机数)，例如 P202603101736123
+
         String orderNo = "P" + LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyyMMddHHmmss")) + (new Random().nextInt(900) + 100);
         order.setOrderNo(orderNo);
         order.setSupplierId(dto.getSupplierId());
         order.setWarehouseId(dto.getWarehouseId());
         order.setTotalAmount(totalAmount);
-        order.setStatus(0); // 【关键】状态 0 代表“待审核”
+        order.setStatus(0);
         order.setRemark(dto.getRemark());
         order.setCreateUser(currentUserId);
 
-        // 【注意】保存主表！保存成功后，MyBatis-Plus 会自动把生成的 ID 塞回到 order 对象里
         this.save(order);
 
-        // 4. 构建采购单明细列表并批量保存
         List<ScmPurchaseDetail> detailList = new ArrayList<>();
         for (PurchaseOrderSubmitDTO.PurchaseDetailDTO detailDto : dto.getDetails()) {
             ScmPurchaseDetail detail = new ScmPurchaseDetail();
-            // 绑定刚刚生成的主表 ID
+
             detail.setOrderId(order.getId());
             detail.setMaterialId(detailDto.getMaterialId());
             detail.setPlanQty(detailDto.getPlanQty());
@@ -95,8 +92,10 @@ public class ScmPurchaseOrderServiceImpl extends ServiceImpl<ScmPurchaseOrderMap
             detailList.add(detail);
         }
 
-        // 批量保存明细到数据库
         purchaseDetailService.saveBatch(detailList);
+
+        // 操作日志
+        operationLogService.saveLog("PURCHASE_SUBMIT", "发起采购申请 单号:" + orderNo, "purchase_order", order.getId());
     }
 
     @Override
@@ -105,36 +104,40 @@ public class ScmPurchaseOrderServiceImpl extends ServiceImpl<ScmPurchaseOrderMap
 
         LambdaQueryWrapper<ScmPurchaseOrder> queryWrapper = new LambdaQueryWrapper<>();
 
-        // 拼接单号模糊查询
         queryWrapper.like(StringUtils.hasText(queryDTO.getOrderNo()), ScmPurchaseOrder::getOrderNo, queryDTO.getOrderNo());
-        // 拼接状态精准查询
         queryWrapper.eq(queryDTO.getStatus() != null, ScmPurchaseOrder::getStatus, queryDTO.getStatus());
-        // 拼接排序规则 (按创建时间倒序)
+        queryWrapper.eq(queryDTO.getSupplierId() != null, ScmPurchaseOrder::getSupplierId, queryDTO.getSupplierId());
+        queryWrapper.eq(queryDTO.getWarehouseId() != null, ScmPurchaseOrder::getWarehouseId, queryDTO.getWarehouseId());
+        if (StringUtils.hasText(queryDTO.getStartDate())) {
+            queryWrapper.ge(ScmPurchaseOrder::getCreateTime, queryDTO.getStartDate() + " 00:00:00");
+        }
+        if (StringUtils.hasText(queryDTO.getEndDate())) {
+            queryWrapper.le(ScmPurchaseOrder::getCreateTime, queryDTO.getEndDate() + " 23:59:59");
+        }
         queryWrapper.orderByDesc(ScmPurchaseOrder::getCreateTime);
 
-        // 3. 执行 MyBatis-Plus 的底部分页查询
         this.page(pageInfo, queryWrapper);
 
-        // 4. 返回查好的结果
-        return pageInfo;    }
+        return pageInfo;
+    }
 
     @Override
     @Transactional(rollbackFor = Exception.class)
     public void auditPass(Long orderId) {
-        // 1. 查询出这笔主订单
         ScmPurchaseOrder order = this.getById(orderId);
         if (order == null) {
             throw new RuntimeException("采购单不存在！");
         }
-        if (order.getStatus() != 0) { // 0: 待审核
+        if (order.getStatus() != 0) {
             throw new RuntimeException("该订单不是待审核状态，无法进行审核操作！");
         }
-        // 2. 修改主表状态：0 -> 1(待入库)
         order.setStatus(1);
         order.setAuditTime(LocalDateTime.now());
         Long currentUserId = BaseContext.getCurrentId();
         order.setAuditUser(currentUserId);
         this.updateById(order);
+
+        operationLogService.saveLog("PURCHASE_AUDIT_PASS", "审核通过采购单 单号:" + order.getOrderNo(), "purchase_order", orderId);
     }
 
     @Override
@@ -147,46 +150,45 @@ public class ScmPurchaseOrderServiceImpl extends ServiceImpl<ScmPurchaseOrderMap
     public void rejectOrder(PurchaseOrderRejectDTO dto) {
         ScmPurchaseOrder order = this.getById(dto.getId());
         if (order != null && order.getStatus() == 0) {
-            order.setStatus(9); // 9: 已驳回
-            // 将驳回原因追加到备注里，方便前端展示
+            order.setStatus(9);
             order.setRemark(order.getRemark() + " [驳回原因: " + dto.getRejectReason() + "]");
             this.updateById(order);
         } else {
             throw new RuntimeException("单据状态异常，无法驳回");
         }
+
+        operationLogService.saveLog("PURCHASE_REJECT", "驳回采购单 单号:" + order.getOrderNo() + " 原因:" + dto.getRejectReason(), "purchase_order", dto.getId());
     }
 
     @Override
     public void confirmPayment(Long orderId) {
         ScmPurchaseOrder order = this.getById(orderId);
         if (order != null && order.getPaymentStatus() == 0) {
-            order.setPaymentStatus(1); // 修改为已结算
+            order.setPaymentStatus(1);
             this.updateById(order);
         }
+
+        operationLogService.saveLog("PURCHASE_PAY", "财务打款 采购单号:" + order.getOrderNo(), "purchase_order", orderId);
     }
 
     @Transactional(rollbackFor = Exception.class)
     public void executeInbound(Long orderId) {
-        // 1. 获取订单，检查状态
         ScmPurchaseOrder order = this.getById(orderId);
         if (order == null || order.getStatus() == 2) {
             throw new RuntimeException("订单不存在或已入库");
         }
 
-        // 2. 获取该订单的所有采购明细
         List<ScmPurchaseDetail> details = detailMapper.selectList(
                 new LambdaQueryWrapper<ScmPurchaseDetail>().eq(ScmPurchaseDetail::getOrderId, orderId)
         );
 
         Long currentUserId = BaseContext.getCurrentId() != null ? BaseContext.getCurrentId() : 1L;
 
-        // 3. 遍历明细，增加库存并记录流水
         for (ScmPurchaseDetail detail : details) {
             Long warehouseId = order.getWarehouseId();
             Long materialId = detail.getMaterialId();
-            Integer addQty = detail.getRealQty() > 0 ? detail.getRealQty() : detail.getPlanQty(); // 优先用实收数量
+            Integer addQty = detail.getRealQty() > 0 ? detail.getRealQty() : detail.getPlanQty();
 
-            // 查询是否已有该库存
             ScmInventory inventory = inventoryMapper.selectOne(
                     new LambdaQueryWrapper<ScmInventory>()
                             .eq(ScmInventory::getWarehouseId, warehouseId)
@@ -195,20 +197,17 @@ public class ScmPurchaseOrderServiceImpl extends ServiceImpl<ScmPurchaseOrderMap
 
             int beforeQty = 0;
             if (inventory == null) {
-                // 如果是新物料第一次入库，新增库存记录
                 inventory = new ScmInventory();
                 inventory.setWarehouseId(warehouseId);
                 inventory.setMaterialId(materialId);
                 inventory.setQuantity(addQty);
                 inventoryMapper.insert(inventory);
             } else {
-                // 如果已有库存，直接累加
                 beforeQty = inventory.getQuantity();
                 inventory.setQuantity(beforeQty + addQty);
                 inventoryMapper.updateById(inventory);
             }
 
-            // 记录入库流水 (Type = 1: 采购入库)
             ScmStockLog log = new ScmStockLog();
             log.setReferenceNo(order.getOrderNo());
             log.setType(1);
@@ -221,28 +220,19 @@ public class ScmPurchaseOrderServiceImpl extends ServiceImpl<ScmPurchaseOrderMap
             stockLogMapper.insert(log);
         }
 
-        // 4. 将订单状态改为 2 (已入库)
         order.setStatus(2);
         this.updateById(order);
-    }
-    @Transactional(rollbackFor = Exception.class)
-    public void quickPurchase(PurchaseQuickOrderDTO dto) {
-        ScmPurchaseOrder order = new ScmPurchaseOrder();
-        order.setOrderNo("P" + System.currentTimeMillis());
-        order.setSupplierId(dto.getSupplierId());
-        order.setWarehouseId(dto.getWarehouseId());
-        order.setTotalAmount(dto.getPrice().multiply(new BigDecimal(dto.getPlanQty())));
-        order.setStatus(0);
-        order.setPaymentStatus(0);
-        order.setRemark("门店极速直采补货");
-        this.save(order);
 
-        ScmPurchaseDetail detail = new ScmPurchaseDetail();
-        detail.setOrderId(order.getId());
-        detail.setMaterialId(dto.getMaterialId());
-        detail.setPlanQty(dto.getPlanQty());
-        detail.setRealQty(dto.getPlanQty());
-        detail.setPrice(dto.getPrice());
-        detailMapper.insert(detail);
+        operationLogService.saveLog("PURCHASE_INBOUND", "采购入库 单号:" + order.getOrderNo(), "purchase_order", orderId);
+    }
+
+    @Override
+    public Long countPending() {
+        return this.baseMapper.countPending();
+    }
+
+    @Override
+    public List<Map<String, Object>> getMonthlyPurchaseTrend() {
+        return this.baseMapper.getMonthlyPurchaseTrend();
     }
 }

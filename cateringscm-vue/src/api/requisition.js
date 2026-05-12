@@ -15,3 +15,7 @@ export function payRequisitionOrder(id) {
 export function rejectRequisitionOrder(id) {
     return request({ url: `/requisition_order/rejectOutbound/${id}`, method: 'post' })
 }
+// 查询请购订单明细
+export function getRequisitionDetails(orderId) {
+    return request({ url: `/requisition_order/details/${orderId}`, method: 'get' })
+}

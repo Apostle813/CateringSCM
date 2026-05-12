@@ -12,4 +12,5 @@ public interface IScmRequisitionOrderService extends IService<ScmRequisitionOrde
     void auditOutbound(Long orderId);
     void rejectOutbound(Long orderId);
     void confirmPayment(Long orderId);
+    Long countPending();
 }

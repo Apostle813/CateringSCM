@@ -19,6 +19,10 @@ public class ScmMaterialServiceImpl extends ServiceImpl<ScmMaterialMapper, ScmMa
         LambdaQueryWrapper<ScmMaterial> queryWrapper = new LambdaQueryWrapper<>();
 
         queryWrapper.like(StringUtils.hasText(queryDTO.getName()), ScmMaterial::getName, queryDTO.getName());
+        // 新增：按分类筛选
+        queryWrapper.eq(StringUtils.hasText(queryDTO.getCategory()), ScmMaterial::getCategory, queryDTO.getCategory());
+        // 新增：按单位筛选
+        queryWrapper.eq(StringUtils.hasText(queryDTO.getUnit()), ScmMaterial::getUnit, queryDTO.getUnit());
         queryWrapper.orderByAsc(ScmMaterial::getId);
 
         this.page(pageInfo, queryWrapper);

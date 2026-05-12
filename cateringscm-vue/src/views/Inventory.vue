@@ -1,6 +1,17 @@
 <template>
   <div class="app-container">
-    <div class="filter-container">
+    <div class="filter-container" style="display: flex; flex-wrap: wrap; gap: 10px;">
+      <el-select v-model="queryParams.warehouseId" placeholder="所在仓库" style="width: 150px;" clearable>
+        <el-option v-for="w in warehouseList" :key="w.id" :label="w.name" :value="w.id" />
+      </el-select>
+      <el-input v-model="queryParams.materialName" placeholder="物资名称" style="width: 180px;" clearable />
+      <el-select v-model="queryParams.category" placeholder="分类" style="width: 120px;" clearable>
+        <el-option label="蔬菜类" value="蔬菜类" />
+        <el-option label="肉禽类" value="肉禽类" />
+        <el-option label="海鲜类" value="海鲜类" />
+        <el-option label="粮油类" value="粮油类" />
+      </el-select>
+      <el-button type="primary" @click="handleQuery">查询</el-button>
       <el-button type="primary" icon="Refresh" @click="getList">刷新库存</el-button>
     </div>
 
@@ -73,11 +84,13 @@
 import { ref, reactive, onMounted } from 'vue'
 import { ElMessage } from 'element-plus'
 import { getInventoryPage, outboundInventory, adjustInventory } from '@/api/inventory'
+import { getWarehouseList } from '@/api/warehouse'
 
 const loading = ref(false)
 const tableData = ref([])
 const total = ref(0)
-const queryParams = reactive({ page: 1, pageSize: 10 })
+const warehouseList = ref([])
+const queryParams = reactive({ page: 1, pageSize: 10, warehouseId: null, materialName: '', category: '' })
 // 弹窗控制
 const outboundVisible = ref(false)
 const adjustVisible = ref(false)
@@ -139,6 +152,15 @@ const submitAdjust = async () => {
   }
 }
 
-onMounted(() => { getList() })
+const handleQuery = () => {
+  queryParams.page = 1
+  getList()
+}
+
+onMounted(() => { 
+  getList()
+  // 加载仓库下拉选项
+  getWarehouseList().then(res => { warehouseList.value = res }).catch(() => {})
+})
 </script>
 <style scoped>.app-container { padding: 20px; }</style>

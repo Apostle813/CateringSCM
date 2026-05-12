@@ -42,6 +42,11 @@ const router = createRouter({
                     component: () => import('@/views/StockLog.vue')
                 },
                 {
+                    path: 'operationlog',
+                    name: '操作日志审计',
+                    component: () => import('@/views/OperationLog.vue')
+                },
+                {
                     path: '/supplier',
                     name: 'Supplier',
                     component: () => import('@/views/Supplier.vue'),
@@ -54,6 +59,12 @@ const router = createRouter({
                     meta: { title: '仓库配置管理' }
                 },
                 {
+                    path: '/store',
+                    name: 'Store',
+                    component: () => import('@/views/Store.vue'),
+                    meta: { title: '门店信息管理' }
+                },
+                {
                     path: '/requisition',
                     name: 'Requisition',
                     component: () => import('@/views/Requisition.vue'),
@@ -64,6 +75,12 @@ const router = createRouter({
                     name: 'SysUser',
                     component: () => import('@/views/SysUser.vue'),
                     meta: { title: '系统用户配置' }
+                },
+                {
+                    path: 'profile',
+                    name: '个人中心',
+                    component: () => import('@/views/Profile.vue'),
+                    meta: { title: '个人中心' }
                 }
             ]
         },

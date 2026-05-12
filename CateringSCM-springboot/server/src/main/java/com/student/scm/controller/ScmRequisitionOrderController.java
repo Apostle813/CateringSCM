@@ -5,17 +5,23 @@ import com.student.scm.dto.RequisitionOrderPageQueryDTO;
 import com.student.scm.dto.RequisitionOrderSubmitDTO;
 import com.student.scm.entity.ScmRequisitionOrder;
 import com.student.scm.result.Result;
+import com.student.scm.service.IScmRequisitionDetailService;
 import com.student.scm.service.IScmRequisitionOrderService;
+import com.student.scm.vo.ScmRequisitionDetailVO;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
 
 @RestController
 @RequestMapping("/requisition_order")
 public class ScmRequisitionOrderController {
 
     private final IScmRequisitionOrderService requisitionOrderService;
+    private final IScmRequisitionDetailService requisitionDetailService;
 
-    public ScmRequisitionOrderController(IScmRequisitionOrderService requisitionOrderService) {
+    public ScmRequisitionOrderController(IScmRequisitionOrderService requisitionOrderService, IScmRequisitionDetailService requisitionDetailService) {
         this.requisitionOrderService = requisitionOrderService;
+        this.requisitionDetailService = requisitionDetailService;
     }
 
     @PostMapping("/submit")
@@ -32,6 +38,11 @@ public class ScmRequisitionOrderController {
     public Result<Page<ScmRequisitionOrder>> page(RequisitionOrderPageQueryDTO queryDTO) {
         Page<ScmRequisitionOrder> pageInfo = requisitionOrderService.queryPageByCondition(queryDTO);
         return Result.success(pageInfo);
+    }
+
+    @GetMapping("/details/{orderId}")
+    public Result<List<ScmRequisitionDetailVO>> details(@PathVariable Long orderId) {
+        return Result.success(requisitionDetailService.listByOrderId(orderId));
     }
 
     @PostMapping("/auditOutbound/{id}")

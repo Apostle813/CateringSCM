@@ -2,6 +2,19 @@
   <div class="app-container">
     <div class="filter-container">
       <el-input v-model="queryParams.name" placeholder="输入食材名称搜索" style="width: 200px; margin-right: 10px;" clearable />
+      <el-select v-model="queryParams.category" placeholder="分类" style="width: 120px; margin-right: 10px;" clearable>
+        <el-option label="蔬菜类" value="蔬菜类" />
+        <el-option label="肉禽类" value="肉禽类" />
+        <el-option label="海鲜类" value="海鲜类" />
+        <el-option label="粮油类" value="粮油类" />
+      </el-select>
+      <el-select v-model="queryParams.unit" placeholder="单位" style="width: 100px; margin-right: 10px;" clearable>
+        <el-option label="kg" value="kg" />
+        <el-option label="个" value="个" />
+        <el-option label="瓶" value="瓶" />
+        <el-option label="袋" value="袋" />
+        <el-option label="箱" value="箱" />
+      </el-select>
       <el-button type="primary" @click="handleQuery">搜索</el-button>
       <el-button type="success" @click="handleAdd">新增食材</el-button>
     </div>
@@ -76,7 +89,9 @@ const dialogTitle = ref('')
 const queryParams = reactive({
   page: 1,
   pageSize: 10,
-  name: ''
+  name: '',
+  category: '',
+  unit: ''
 })
 
 const form = reactive({

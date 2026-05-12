@@ -22,4 +22,12 @@ public interface IScmInventoryService extends IService<ScmInventory> {
     List<Map<String, Object>> getLowStockAlerts();
 
     void adjust(InventoryAdjustDTO dto);
+
+    Integer getStockQty(Long warehouseId, Long materialId);
+
+    List<Map<String, Object>> getWarehouseAssetDistribution();
+
+    Integer getMonthInboundQty();
+
+    Integer getMonthOutboundQty();
 }

@@ -11,7 +11,10 @@ public class PurchaseOrderPageQueryDTO {
     // 2. 具体的业务过滤条件
     private String orderNo;  // 按单号模糊查
     private Integer status;  // 按状态精准查
-
-    // 如果以后老板说：“我要加个按供应商查询！”
-    // 你只需要在这里加一行 private Long supplierId; 即可，接口定义完全不用动！
+    
+    // 新增筛选字段
+    private String startDate;  // 开始日期
+    private String endDate;    // 结束日期
+    private Long supplierId;   // 供应商ID
+    private Long warehouseId; // 仓库ID
 }

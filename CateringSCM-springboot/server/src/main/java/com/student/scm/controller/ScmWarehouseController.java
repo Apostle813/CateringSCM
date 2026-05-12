@@ -3,10 +3,9 @@ package com.student.scm.controller;
 
 import com.student.scm.entity.ScmWarehouse;
 import com.student.scm.result.Result;
+import com.student.scm.service.IScmOperationLogService;
 import com.student.scm.service.IScmWarehouseService;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
@@ -15,9 +14,11 @@ import java.util.List;
 @RequestMapping("/warehouse")
 public class ScmWarehouseController {
     private IScmWarehouseService warehouseService;
+    private IScmOperationLogService operationLogService;
 
-    public ScmWarehouseController(IScmWarehouseService warehouseService) {
+    public ScmWarehouseController(IScmWarehouseService warehouseService, IScmOperationLogService operationLogService) {
         this.warehouseService = warehouseService;
+        this.operationLogService = operationLogService;
     }
 
     @GetMapping("/list")
@@ -25,15 +26,17 @@ public class ScmWarehouseController {
         return Result.success(warehouseService.list());
     }
 
-    @org.springframework.web.bind.annotation.PostMapping
-    public Result<?> addWarehouse(@org.springframework.web.bind.annotation.RequestBody ScmWarehouse warehouse) {
+    @PostMapping
+    public Result<?> addWarehouse(@RequestBody ScmWarehouse warehouse) {
         warehouseService.save(warehouse);
+        operationLogService.saveLog("WAREHOUSE_ADD", "新增仓库 " + warehouse.getName(), "warehouse", warehouse.getId());
         return Result.success();
     }
 
-    @org.springframework.web.bind.annotation.PutMapping("/update")
-    public Result<?> updateWarehouse(@org.springframework.web.bind.annotation.RequestBody ScmWarehouse warehouse) {
+    @PutMapping("/update")
+    public Result<?> updateWarehouse(@RequestBody ScmWarehouse warehouse) {
         warehouseService.updateById(warehouse);
+        operationLogService.saveLog("WAREHOUSE_UPDATE", "修改仓库 ID:" + warehouse.getId(), "warehouse", warehouse.getId());
         return Result.success();
     }
 }

@@ -15,6 +15,7 @@ public class PurchaseOrderSubmitDTO {
     private Long supplierId;     // 供应商ID
     private Long warehouseId;    // 入库仓库ID
     private String remark;       // 备注
+    private BigDecimal totalAmount;
 
     // 2. 明细列表 (这里是一个 List 集合！)
     private List<PurchaseDetailDTO> details;

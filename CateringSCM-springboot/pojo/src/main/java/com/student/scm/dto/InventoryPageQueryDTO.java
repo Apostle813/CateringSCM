@@ -10,6 +10,10 @@ public class InventoryPageQueryDTO {
     private Integer page = 1;
     @Min(value = 5, message = "分页大小至少为5")
     private Integer pageSize = 10;
-    private Long warehouseId;
-    private Long materialId;
+    
+    // 2. 具体的业务过滤条件
+    private Long warehouseId;  // 按仓库筛选
+    private Long materialId;   // 按物料筛选
+    private String materialName; // 按物料名称模糊查
+    private String category;     // 按分类筛选
 }

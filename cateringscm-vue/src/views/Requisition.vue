@@ -7,6 +7,11 @@
         <el-option label="已配送出库" :value="1" />
         <el-option label="已驳回" :value="9" />
       </el-select>
+      <el-select v-model="queryParams.warehouseId" placeholder="出库仓库" style="width: 150px; margin-right: 10px;" clearable>
+        <el-option v-for="w in warehouseList" :key="w.id" :label="w.name" :value="w.id" />
+      </el-select>
+      <el-date-picker v-model="queryParams.startDate" type="date" placeholder="开始日期" style="margin-right: 10px;" />
+      <el-date-picker v-model="queryParams.endDate" type="date" placeholder="结束日期" style="margin-right: 10px;" />
       <el-button type="primary" @click="handleQuery">查询</el-button>
       <el-button v-if="userRole === 'ADMIN' || userRole === 'PURCHASER'" type="success" @click="handleAdd">门店发起请购</el-button>
     </div>
@@ -14,8 +19,16 @@
     <el-table :data="tableData" v-loading="loading" border style="margin-top: 20px;">
       <el-table-column prop="id" label="ID" width="80" align="center" />
       <el-table-column prop="orderNo" label="出库单号" width="180" />
-      <el-table-column prop="storeId" label="申请门店ID" width="120" align="center" />
-      <el-table-column prop="warehouseId" label="出库仓库ID" width="120" align="center" />
+      <el-table-column label="申请门店" width="150" align="center">
+        <template #default="scope">
+          {{ getStoreName(scope.row.storeId) }}
+        </template>
+      </el-table-column>
+      <el-table-column label="出库仓库" width="150" align="center">
+        <template #default="scope">
+          {{ getWarehouseName(scope.row.warehouseId) }}
+        </template>
+      </el-table-column>
       <el-table-column prop="createTime" label="申请时间" width="180" />
       <el-table-column label="出库状态" width="120" align="center">
         <template #default="scope">
@@ -31,21 +44,20 @@
           </el-tag>
         </template>
       </el-table-column>
-      <el-table-column label="操作" width="220" align="center" fixed="right">
+      <el-table-column label="操作" width="280" align="center" fixed="right">
         <template #default="scope">
-          <template v-if="scope.row.status === 0">
-            <template v-if="userRole === 'ADMIN' || userRole === 'WAREHOUSE'">
-              <el-button type="primary" size="small" @click="handleAudit(scope.row.id)">审核发货</el-button>
-              <el-button type="danger" size="small" @click="handleReject(scope.row.id)">驳回</el-button>
-            </template>
-            <span v-else style="color: #E6A23C; font-size: 13px;">等待审核</span>
+          <el-button type="primary" link size="small" @click="showDetail(scope.row)">查看详情</el-button>
+
+          <template v-if="scope.row.status === 0 && (userRole === 'ADMIN' || userRole === 'WAREHOUSE')">
+            <el-button type="success" link size="small" @click="handleAudit(scope.row.id)">审核发货</el-button>
+            <el-button type="danger" link size="small" @click="handleReject(scope.row.id)">驳回</el-button>
           </template>
-          
+
           <el-button
               v-if="scope.row.status === 1 && scope.row.paymentStatus === 0 && userRole === 'ADMIN'"
               type="warning"
+              link
               size="small"
-              style="margin-left: 10px;"
               @click="handlePay(scope.row.id)">
             内部结算
           </el-button>
@@ -64,27 +76,28 @@
     />
 
     <!-- 发起请购弹窗 -->
-    <el-dialog title="门店发起请购" v-model="dialogVisible" width="600px">
+    <el-dialog title="门店发起请购" v-model="dialogVisible" width="650px">
       <el-form :model="form" label-width="120px">
         <el-form-item label="申请门店" required>
           <el-select v-model="form.storeId" placeholder="请选择请购门店" style="width: 100%">
-            <el-option label="北京朝阳一店 (ID:1)" :value="1" />
-            <el-option label="北京海淀二店 (ID:2)" :value="2" />
-            <el-option label="上海黄浦店 (ID:3)" :value="3" />
+            <el-option v-for="s in storeOptions" :key="s.id" :label="s.name" :value="s.id" />
           </el-select>
         </el-form-item>
         <el-form-item label="发货仓库" required>
-          <el-select v-model="form.warehouseId" placeholder="请选择发货仓库" style="width: 100%">
+          <el-select v-model="form.warehouseId" placeholder="请选择发货仓库" style="width: 100%" @change="onWarehouseChange">
             <el-option v-for="w in warehouseList" :key="w.id" :label="w.name" :value="w.id" />
           </el-select>
         </el-form-item>
 
         <el-divider>选择请购物资</el-divider>
-        <div v-for="(item, index) in form.details" :key="index" style="display: flex; margin-bottom: 10px; gap: 10px;">
-          <el-select v-model="item.materialId" placeholder="选择食材" style="flex: 2;">
+        <div v-for="(item, index) in form.details" :key="index" style="display: flex; margin-bottom: 10px; gap: 10px; align-items: center;">
+          <el-select v-model="item.materialId" placeholder="选择食材" style="flex: 2;" @change="handleMaterialChange($event, index)">
             <el-option v-for="m in materialList" :key="m.id" :label="m.name + ' (' + m.unit + ')'" :value="m.id" />
           </el-select>
           <el-input-number v-model="item.planQty" :min="1" placeholder="数量" style="flex: 1;" />
+          <el-tag v-if="item.stockLabel" :type="item.stockType || 'info'" size="small" style="white-space: nowrap;">
+            {{ item.stockLabel }}
+          </el-tag>
           <el-button type="danger" icon="Delete" circle @click="removeDetail(index)" />
         </div>
         <el-button type="dashed" style="width: 100%" @click="addDetail">+ 添加一项物资</el-button>
@@ -94,15 +107,46 @@
         <el-button type="primary" @click="submitForm">确认提交</el-button>
       </template>
     </el-dialog>
+
+    <!-- 请购单详情弹窗 -->
+    <el-dialog title="请购出库单详情" v-model="detailVisible" width="700px">
+      <el-descriptions :column="2" border style="margin-bottom: 20px;">
+        <el-descriptions-item label="单号">{{ detailInfo.orderNo }}</el-descriptions-item>
+        <el-descriptions-item label="状态">
+          <el-tag :type="detailInfo.status === 1 ? 'success' : (detailInfo.status === 9 ? 'danger' : 'warning')">
+            {{ detailInfo.status === 1 ? '已发货' : (detailInfo.status === 9 ? '已驳回' : '待审核') }}
+          </el-tag>
+        </el-descriptions-item>
+        <el-descriptions-item label="申请门店">{{ getStoreName(detailInfo.storeId) }}</el-descriptions-item>
+        <el-descriptions-item label="出库仓库">{{ getWarehouseName(detailInfo.warehouseId) }}</el-descriptions-item>
+        <el-descriptions-item label="结算状态">
+          <el-tag :type="detailInfo.paymentStatus === 1 ? 'success' : 'danger'">
+            {{ detailInfo.paymentStatus === 1 ? '已结算' : '未结算' }}
+          </el-tag>
+        </el-descriptions-item>
+        <el-descriptions-item label="申请时间">{{ detailInfo.createTime }}</el-descriptions-item>
+      </el-descriptions>
+
+      <el-divider>请购物资明细</el-divider>
+      <el-table :data="detailList" border size="small">
+        <el-table-column prop="materialName" label="食材名称" min-width="120" />
+        <el-table-column prop="category" label="分类" width="100" />
+        <el-table-column prop="unit" label="单位" width="80" align="center" />
+        <el-table-column prop="planQty" label="请购数量" width="100" align="center" />
+        <el-table-column prop="realQty" label="实际出库数量" width="120" align="center" />
+      </el-table>
+    </el-dialog>
   </div>
 </template>
 
 <script setup>
 import { ref, reactive, onMounted } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
-import { getRequisitionPage, submitRequisition, auditRequisitionOutbound, payRequisitionOrder, rejectRequisitionOrder } from '@/api/requisition'
+import { getRequisitionPage, submitRequisition, auditRequisitionOutbound, payRequisitionOrder, rejectRequisitionOrder, getRequisitionDetails } from '@/api/requisition'
 import { getWarehouseList } from '@/api/warehouse'
 import { getMaterialPage } from '@/api/material'
+import { getStoreList } from '@/api/store'
+import { getStockQty } from '@/api/inventory'
 
 const userRole = localStorage.getItem('userRole') || 'ADMIN'
 
@@ -114,7 +158,10 @@ const queryParams = reactive({
   page: 1,
   pageSize: 10,
   orderNo: '',
-  status: null
+  status: null,
+  warehouseId: null,
+  startDate: '',
+  endDate: ''
 })
 
 const dialogVisible = ref(false)
@@ -126,6 +173,12 @@ const form = reactive({
 
 const warehouseList = ref([])
 const materialList = ref([])
+const storeOptions = ref([])
+
+// 详情弹窗
+const detailVisible = ref(false)
+const detailInfo = ref({})
+const detailList = ref([])
 
 const getList = async () => {
   loading.value = true
@@ -144,11 +197,25 @@ const handleQuery = () => {
 }
 
 const loadBasicData = async () => {
-  const wRes = await getWarehouseList()
+  const [wRes, mRes, sRes] = await Promise.all([
+    getWarehouseList(),
+    getMaterialPage({ page: 1, pageSize: 500 }),
+    getStoreList()
+  ])
   warehouseList.value = wRes
-  
-  const mRes = await getMaterialPage({ page: 1, pageSize: 500 })
   materialList.value = mRes.records
+  storeOptions.value = sRes
+}
+
+// 门店/仓库名称映射
+const getStoreName = (storeId) => {
+  const store = storeOptions.value.find(s => s.id === storeId)
+  return store ? store.name : `门店ID:${storeId}`
+}
+
+const getWarehouseName = (warehouseId) => {
+  const wh = warehouseList.value.find(w => w.id === warehouseId)
+  return wh ? wh.name : `仓库ID:${warehouseId}`
 }
 
 const handleAdd = () => {
@@ -159,11 +226,46 @@ const handleAdd = () => {
 }
 
 const addDetail = () => {
-  form.details.push({ materialId: null, planQty: 1 })
+  form.details.push({ materialId: null, planQty: 1, stockLabel: '', stockType: 'info' })
 }
 
 const removeDetail = (index) => {
   form.details.splice(index, 1)
+}
+
+// 仓库改变时清空库存提示并重新加载
+const onWarehouseChange = () => {
+  form.details.forEach(item => {
+    item.stockLabel = ''
+    item.stockType = 'info'
+  })
+  form.details.forEach((item, index) => {
+    if (item.materialId && form.warehouseId) {
+      loadStockLabel(index)
+    }
+  })
+}
+
+// 选择食材后加载库存提示
+const handleMaterialChange = async (val, index) => {
+  if (form.warehouseId && val) {
+    await loadStockLabel(index)
+  } else {
+    form.details[index].stockLabel = ''
+  }
+}
+
+const loadStockLabel = async (index) => {
+  const item = form.details[index]
+  if (!form.warehouseId || !item.materialId) return
+  try {
+    const unit = materialList.value.find(m => m.id === item.materialId)?.unit || ''
+    const qty = await getStockQty({ warehouseId: form.warehouseId, materialId: item.materialId })
+    item.stockLabel = `库存: ${qty}${unit}`
+    item.stockType = qty > 0 ? 'success' : 'danger'
+  } catch (e) {
+    item.stockLabel = ''
+  }
 }
 
 const submitForm = async () => {
@@ -185,6 +287,17 @@ const submitForm = async () => {
     dialogVisible.value = false
     getList()
   } catch(e) {}
+}
+
+// 查看详情
+const showDetail = async (row) => {
+  detailInfo.value = row
+  try {
+    detailList.value = await getRequisitionDetails(row.id)
+    detailVisible.value = true
+  } catch (e) {
+    console.error('加载详情失败', e)
+  }
 }
 
 const handleAudit = (id) => {
@@ -225,5 +338,5 @@ onMounted(() => {
 
 <style scoped>
 .app-container { padding: 20px; }
-.filter-container { margin-bottom: 20px; }
+.filter-container { margin-bottom: 20px; display: flex; flex-wrap: wrap; gap: 10px; }
 </style>
