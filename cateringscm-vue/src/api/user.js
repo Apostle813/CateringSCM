@@ -29,3 +29,7 @@ export function deleteUser(id) {
 export function getRoleList() {
     return request({ url: '/role/list', method: 'get' })
 }
+
+export function changePassword(data) {
+    return request({ url: '/user/change-password', method: 'put', data })
+}

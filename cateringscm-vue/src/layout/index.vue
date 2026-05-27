@@ -31,7 +31,7 @@
           <el-menu-item index="/sysuser">系统用户配置</el-menu-item>
         </el-sub-menu>
 
-        <el-sub-menu v-if="userRole === 'ADMIN' || userRole === 'PURCHASER'" index="3">
+        <el-sub-menu v-if="userRole === 'ADMIN' || userRole === 'PURCHASER' || userRole === 'WAREHOUSE'" index="3">
           <template #title>
             <el-icon><ShoppingCart /></el-icon>
             <span>采购与请购业务</span>

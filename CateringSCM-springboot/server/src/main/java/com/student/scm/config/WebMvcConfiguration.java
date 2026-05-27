@@ -24,8 +24,10 @@ public class WebMvcConfiguration implements WebMvcConfigurer {
         registry.addInterceptor(jwtTokenInterceptor)
                 .addPathPatterns("/**")             // 拦截所有请求
                 .excludePathPatterns("/user/login") // 排除登录接口
-                .excludePathPatterns("/swagger-ui/**") // 排除登录接口
-                .excludePathPatterns("/v3/**") // 排除登录接口
-                .excludePathPatterns("/file/upload"); // 如果你有图片上传展示接口，建议也排除一下
+                .excludePathPatterns("/user/exists") // 忘记密码 — 检查账号
+                .excludePathPatterns("/user/reset-password") // 忘记密码 — 重置密码
+                .excludePathPatterns("/swagger-ui/**") // 排除Swagger
+                .excludePathPatterns("/v3/**") // 排除OpenAPI
+                .excludePathPatterns("/file/upload"); // 排除文件上传
     }
 }

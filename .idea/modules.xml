@@ -4,6 +4,9 @@
     <modules>
       <module fileurl="file://$PROJECT_DIR$/.idea/CateringSCM.iml" filepath="$PROJECT_DIR$/.idea/CateringSCM.iml" />
       <module fileurl="file://$PROJECT_DIR$/cateringscm-vue/cateringscm-vue.iml" filepath="$PROJECT_DIR$/cateringscm-vue/cateringscm-vue.iml" />
+      <module fileurl="file://$PROJECT_DIR$/CateringSCM-springboot/common/common.iml" filepath="$PROJECT_DIR$/CateringSCM-springboot/common/common.iml" />
+      <module fileurl="file://$PROJECT_DIR$/CateringSCM-springboot/pojo/pojo.iml" filepath="$PROJECT_DIR$/CateringSCM-springboot/pojo/pojo.iml" />
+      <module fileurl="file://$PROJECT_DIR$/CateringSCM-springboot/server/server.iml" filepath="$PROJECT_DIR$/CateringSCM-springboot/server/server.iml" />
     </modules>
   </component>
 </project>

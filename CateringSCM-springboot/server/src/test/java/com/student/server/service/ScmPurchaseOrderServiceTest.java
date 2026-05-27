@@ -1,6 +1,5 @@
 package com.student.server.service;
 
-import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.student.scm.context.BaseContext;
 import com.student.scm.dto.PurchaseOrderRejectDTO;
 import com.student.scm.dto.PurchaseOrderSubmitDTO;
@@ -9,12 +8,16 @@ import com.student.scm.mapper.ScmInventoryMapper;
 import com.student.scm.mapper.ScmPurchaseDetailMapper;
 import com.student.scm.mapper.ScmPurchaseOrderMapper;
 import com.student.scm.mapper.ScmStockLogMapper;
-import com.student.scm.service.*;
+import com.student.scm.service.IScmInventoryService;
+import com.student.scm.service.IScmOperationLogService;
+import com.student.scm.service.IScmPurchaseDetailService;
+import com.student.scm.service.IScmStockLogService;
 import com.student.scm.service.impl.ScmPurchaseOrderServiceImpl;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.*;
+import org.mockito.Mock;
+import org.mockito.MockedStatic;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.math.BigDecimal;
@@ -45,7 +48,6 @@ class ScmPurchaseOrderServiceTest {
                 purchaseDetailService, inventoryService, stockLogService,
                 operationLogService, inventoryMapper, detailMapper, stockLogMapper
         );
-        // 向上搜索类层次，找到 baseMapper 字段并注入
         Class<?> clazz = purchaseOrderService.getClass();
         while (clazz != null) {
             try {
@@ -53,13 +55,11 @@ class ScmPurchaseOrderServiceTest {
                 f.setAccessible(true);
                 f.set(purchaseOrderService, purchaseOrderMapper);
                 break;
-            } catch (NoSuchFieldException e) {
-                clazz = clazz.getSuperclass();
-            }
+            } catch (NoSuchFieldException e) { clazz = clazz.getSuperclass(); }
         }
     }
 
-    // ==================== submitOrder 测试 ====================
+    // ==================== submitOrder ====================
     @Test
     void testSubmitOrder_Success() {
         PurchaseOrderSubmitDTO dto = new PurchaseOrderSubmitDTO();
@@ -96,7 +96,7 @@ class ScmPurchaseOrderServiceTest {
         assertEquals("采购明细不能为空", ex.getMessage());
     }
 
-    // ==================== rejectOrder 测试 ====================
+    // ==================== rejectOrder ====================
     @Test
     void testRejectOrder_Success() {
         ScmPurchaseOrder order = new ScmPurchaseOrder();
@@ -105,7 +105,6 @@ class ScmPurchaseOrderServiceTest {
         order.setStatus(0);
         order.setRemark("原始备注");
 
-        // 现在 baseMapper 已注入，getById 可以正常工作
         when(purchaseOrderMapper.selectById(1L)).thenReturn(order);
 
         PurchaseOrderRejectDTO dto = new PurchaseOrderRejectDTO();
@@ -117,7 +116,7 @@ class ScmPurchaseOrderServiceTest {
         assertTrue(order.getRemark().contains("价格不合理"));
     }
 
-    // ==================== confirmPayment 测试 ====================
+    // ==================== confirmPayment ====================
     @Test
     void testConfirmPayment_Success() {
         ScmPurchaseOrder order = new ScmPurchaseOrder();
@@ -129,7 +128,7 @@ class ScmPurchaseOrderServiceTest {
         assertEquals(1, order.getPaymentStatus());
     }
 
-    // ==================== countPending 测试 ====================
+    // ==================== countPending ====================
     @Test
     void testCountPending() {
         when(purchaseOrderMapper.countPending()).thenReturn(5L);

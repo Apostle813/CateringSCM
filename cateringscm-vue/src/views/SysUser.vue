@@ -28,9 +28,10 @@
         </template>
       </el-table-column>
       <el-table-column prop="createTime" label="创建时间" min-width="180" />
-      <el-table-column label="操作" width="180" align="center" fixed="right">
+      <el-table-column label="操作" width="250" align="center" fixed="right">
         <template #default="scope">
           <el-button type="primary" size="small" @click="handleEdit(scope.row)">编辑</el-button>
+          <el-button type="warning" size="small" @click="handleChangePassword(scope.row)">改密</el-button>
           <el-button type="danger" size="small" @click="handleDelete(scope.row)">删除</el-button>
         </template>
       </el-table-column>
@@ -72,13 +73,32 @@
         <el-button type="primary" @click="submitForm">确定</el-button>
       </template>
     </el-dialog>
+
+    <!-- 修改密码弹窗 -->
+    <el-dialog title="修改密码" v-model="pwdDialogVisible" width="450px">
+      <el-form :model="pwdForm" :rules="pwdRules" ref="pwdFormRef" label-width="100px">
+        <el-form-item label="目标用户">
+          <el-tag>{{ pwdForm.username + ' (' + pwdForm.realName + ')' }}</el-tag>
+        </el-form-item>
+        <el-form-item label="新密码" prop="newPassword">
+          <el-input v-model="pwdForm.newPassword" type="password" show-password placeholder="请输入新密码" />
+        </el-form-item>
+        <el-form-item label="确认新密码" prop="confirmPassword">
+          <el-input v-model="pwdForm.confirmPassword" type="password" show-password placeholder="请再次输入新密码" />
+        </el-form-item>
+      </el-form>
+      <template #footer>
+        <el-button @click="pwdDialogVisible = false">取消</el-button>
+        <el-button type="primary" @click="submitPwdForm">确定修改</el-button>
+      </template>
+    </el-dialog>
   </div>
 </template>
 
 <script setup>
 import { ref, reactive, onMounted } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
-import { getUserPage, addUser, updateUser, deleteUser, getRoleList } from '@/api/user'
+import { getUserPage, addUser, updateUser, deleteUser, getRoleList, changePassword } from '@/api/user'
 
 const loading = ref(false)
 const tableData = ref([])
@@ -180,6 +200,63 @@ const handleDelete = (row) => {
     ElMessage.success('删除成功')
     getList()
   }).catch(() => {})
+}
+
+// ========== 修改密码相关 ==========
+const pwdDialogVisible = ref(false)
+const pwdFormRef = ref(null)
+const pwdForm = reactive({
+  userId: null,
+  username: '',
+  realName: '',
+  newPassword: '',
+  confirmPassword: ''
+})
+
+const validateConfirmPwd = (rule, value, callback) => {
+  if (value !== pwdForm.newPassword) {
+    callback(new Error('两次输入的密码不一致'))
+  } else {
+    callback()
+  }
+}
+
+const pwdRules = {
+  newPassword: [
+    { required: true, message: '请输入新密码', trigger: 'blur' },
+    { min: 3, message: '密码至少3位', trigger: 'blur' }
+  ],
+  confirmPassword: [
+    { required: true, message: '请确认新密码', trigger: 'blur' },
+    { validator: validateConfirmPwd, trigger: 'blur' }
+  ]
+}
+
+const handleChangePassword = (row) => {
+  pwdForm.userId = row.id
+  pwdForm.username = row.username
+  pwdForm.realName = row.realName
+  pwdForm.newPassword = ''
+  pwdForm.confirmPassword = ''
+  pwdDialogVisible.value = true
+}
+
+const submitPwdForm = async () => {
+  if (!pwdFormRef.value) return
+  await pwdFormRef.value.validate(async (valid) => {
+    if (valid) {
+      try {
+        await changePassword({
+          userId: pwdForm.userId,
+          newPassword: pwdForm.newPassword
+        })
+        ElMessage.success('密码修改成功')
+        pwdDialogVisible.value = false
+      } catch (e) {
+        // 错误信息由拦截器统一提示
+      }
+    }
+  })
 }
 
 const getRoleName = (roleId) => {

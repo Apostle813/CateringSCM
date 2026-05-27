@@ -32,11 +32,9 @@ class ScmRequisitionOrderServiceTest {
 
     @BeforeEach
     void setUp() throws Exception {
-        // 使用带operationLogService的构造器
         requisitionOrderService = new ScmRequisitionOrderServiceImpl(
                 detailService, inventoryService, stockLogService, operationLogService
         );
-        // 反射注入 baseMapper
         Class<?> clazz = requisitionOrderService.getClass();
         while (clazz != null) {
             try {
@@ -44,9 +42,7 @@ class ScmRequisitionOrderServiceTest {
                 f.setAccessible(true);
                 f.set(requisitionOrderService, requisitionOrderMapper);
                 break;
-            } catch (NoSuchFieldException e) {
-                clazz = clazz.getSuperclass();
-            }
+            } catch (NoSuchFieldException e) { clazz = clazz.getSuperclass(); }
         }
     }
 

@@ -5,6 +5,7 @@ import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.student.scm.constant.MessageConstant;
 import com.student.scm.context.BaseContext;
+import com.student.scm.dto.ChangePasswordDTO;
 import com.student.scm.dto.ScmSysUserLoginDTO;
 import com.student.scm.dto.ScmSysUserPageQueryDTO;
 import com.student.scm.entity.ScmSysRole;
@@ -119,5 +120,56 @@ public class ScmSysUserServiceImpl extends ServiceImpl<ScmSysUserMapper, ScmSysU
                 .roleName(roleName)
                 .status(user.getStatus())
                 .build();
+    }
+
+    @Override
+    public void changePassword(ChangePasswordDTO dto) {
+        // 1. 获取当前登录用户
+        Long currentUserId = BaseContext.getCurrentId();
+        ScmSysUser currentUser = userMapper.selectById(currentUserId);
+        if (currentUser == null) {
+            throw new RuntimeException("用户不存在");
+        }
+
+        // 2. 查询当前用户的角色
+        ScmSysRole role = roleMapper.selectById(currentUser.getRoleId());
+        boolean isAdmin = role != null && "ADMIN".equalsIgnoreCase(role.getRoleCode());
+
+        // 3. 确定目标用户
+        Long targetUserId = (dto.getUserId() != null) ? dto.getUserId() : currentUserId;
+
+        // 4. 非管理员：只能改自己的密码，且必须验证旧密码
+        if (!isAdmin) {
+            if (!targetUserId.equals(currentUserId)) {
+                throw new RuntimeException(MessageConstant.NO_PERMISSION_CHANGE_PASSWORD);
+            }
+            if (dto.getOldPassword() == null || dto.getOldPassword().trim().isEmpty()) {
+                throw new RuntimeException("请填写原密码");
+            }
+            String oldMd5 = DigestUtils.md5DigestAsHex(dto.getOldPassword().getBytes());
+            if (!oldMd5.equals(currentUser.getPassword())) {
+                throw new RuntimeException(MessageConstant.OLD_PASSWORD_ERROR);
+            }
+        } else {
+            // 管理员：如果修改的是自己的密码，也需要验证旧密码
+            if (targetUserId.equals(currentUserId)) {
+                if (dto.getOldPassword() == null || dto.getOldPassword().trim().isEmpty()) {
+                    throw new RuntimeException("修改自己的密码请填写原密码");
+                }
+                String oldMd5 = DigestUtils.md5DigestAsHex(dto.getOldPassword().getBytes());
+                if (!oldMd5.equals(currentUser.getPassword())) {
+                    throw new RuntimeException(MessageConstant.OLD_PASSWORD_ERROR);
+                }
+            }
+        }
+
+        // 5. 更新密码
+        if (dto.getNewPassword() == null || dto.getNewPassword().trim().isEmpty()) {
+            throw new RuntimeException("新密码不能为空");
+        }
+        ScmSysUser targetUser = new ScmSysUser();
+        targetUser.setId(targetUserId);
+        targetUser.setPassword(DigestUtils.md5DigestAsHex(dto.getNewPassword().getBytes()));
+        userMapper.updateById(targetUser);
     }
 }

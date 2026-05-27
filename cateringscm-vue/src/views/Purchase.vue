@@ -12,7 +12,7 @@
       <el-date-picker v-model="queryParams.startDate" type="date" placeholder="开始日期" style="margin-right: 10px;" />
       <el-date-picker v-model="queryParams.endDate" type="date" placeholder="结束日期" style="margin-right: 10px;" />
       <el-button type="primary" @click="handleQuery">查询</el-button>
-      <el-button type="success" icon="Plus" @click="openPurchaseDialog">发起采购</el-button>
+      <el-button type="success" icon="Plus" v-if="userRole === 'ADMIN' || userRole === 'PURCHASER'" @click="openPurchaseDialog">发起采购</el-button>
       <el-button type="primary" icon="Refresh" @click="getList">刷新列表</el-button>
     </div>
 
@@ -101,7 +101,7 @@
 
     <el-table :data="tableData" v-loading="loading" border stripe style="margin-top: 20px;">
       <el-table-column prop="id" label="ID" width="60" align="center" />
-      <el-table-column prop="orderNo" label="单号" width="160" />
+      <el-table-column prop="orderNo" label="单号" width="180" />
       <el-table-column prop="totalAmount" label="总金额" width="120">
         <template #default="scope">
           <span style="color: #67C23A; font-weight: bold;">¥{{ scope.row.totalAmount }}</span>
@@ -144,7 +144,7 @@
           </el-button>
 
           <el-button
-              v-if="scope.row.paymentStatus === 0"
+              v-if="scope.row.paymentStatus === 0 && (userRole === 'ADMIN')"
               type="warning"
               link
               size="small"
